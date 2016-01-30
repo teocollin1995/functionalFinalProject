@@ -1,0 +1,20 @@
+Backup plan (in case you don't like the first option):
+
+
+The goal of this project would be to create a game of global thermonuclear war with an AI, as depicted in the movie Wargames. Basically, in real time, the player and the AI would make choices about launching nuclear missiles, bombers, submarines, and the placement of anti-missile defense systems. The game would consist of a map, which displayed the inbound missiles, bombers, subs as well as the world population and cities. The interface for the control of these systems could be a command line or a point/click system. The mechanics of the game would probably be barrowed from a previous command-line version of this that I wrote about a year ago. The AI we would have to figure out.
+
+The AI and the main game loop/animations would be the main application of what we have learned in class. The applications of FRP to making the game are obvious. There are select number of things the player or the AI can do and these will translate will to events. The state is just the collection of missiles, subs, bombers, and cities. Obviously, this will be quite a bit more complicated than angything we have done in class, but it should be doable. The animations are also doable with just collage. The AI is hopefully where the data structures would come into play. What exaclty we would use is unclear, but we will probably be required to design/use something for the AI.
+
+Th AI and animations are the areas where we would be doing some research. For the AI, we would probably need something more complicated than a simple mini-max and the continous aspect of the game would make this harder as it can't take an infinte amount of time to make choices. As for the animations, I'm somewhat curious as to how little forms one can add to a collage before it degredates performace. If I have 30,000 missiles on screen each deploying 8 nukes for a few minutes, does my browser just crash? I'm not sure, but if wolframpha alpha is not an option, we will probably find out and need to mitigate it somehow.
+
+
+The plan of attack is as follows:
+-decide on the game logic
+-Write up events/model
+-Create one API for human and computer usage
+-Divide into one person working on the AI and the other person working on the animations/human controls
+--Join backtogeather
+-Play test
+--examine performance issues
+--examine AI issues
+
