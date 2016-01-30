@@ -1,23 +1,44 @@
-partner: Teo Collin
+partners: Teo Collin & Bowen Wang
 
 Project proposal 1: Wolframalpha in Elm
 
 Goals:
-Build a complex algebraic system that can perform a part of the functionalities of wolframalpha including basic arithmetic, calculus (derivatives and integrals), linear algebra (matrix operations, determinant, eigenvalues and eigenvectors, diagonalization, etc), plotting graphs, and so on.
+Build a complex algebraic system that can perform a part of the functionalists of wolframalpha including basic arithmetic, calculus (derivatives and integrals), linear algebra (matrix operations, determinant, eigenvalues and eigenvectors, diagonalization, etc), plotting graphs, generation of more interesting graphics, and so on. 
 
-apsects of the project that will build on Elm experience already developed:
+Aspects of the project that will build on Elm experience already developed:
 basic functional programming knowledge (algebraic datatype manipulation), the 2D graphics, basic FRP.
 
 aspects of the project that will require additional tools and techniques to implement:
 1 A parser for input (equations, functions, polynomials, matrices, etc)
 2 Html tools that can help build the interface
+3 Possibly tools for speeding up computation. This will have to be investigated after we see how it performance and may not be necessary. However, it is telling that the only refrence that I can find to linear algebra in the elm library is http://package.elm-lang.org/packages/elm-community/elm-linear-algebra/1.0.1/. Given that this just outsources the computation to a js library, we may find it neccessary to do so too, but we will avoid if at all possible. 
 
 plan of attack for the project:
-The projects can be divided into four parts:
+The projects can be divided into four parts and after part1 is tackled, parts 2 and 3 can be tackled simultaneously:
 1 The internal representation of the expressions we deal with
 2 The parser for parsing the input into the representation we use.
 3 Different functions of processing the parsed input including the calculus library and the linear algebra library
 4 The interface to unparse the expression in Elm to human readable format and possibly graphics for displaying the output
 
-steps that can be expanded or reduced: Since only the part1, part2, and part4 of the projects are absolutely necessarily, we can easily add and expand and reduce the size of the project by enabling more or less functionalities in part3. For example, we can add a number theory section as the one in wolframalpha, or we can reduce some functionalities in the linear algebra library if we find it hard to implement. 
+steps that can be expanded or reduced: Since only the part1, part2, and part4 of the projects are absolutely necessarily, we can easily add and expand and reduce the size of the project by enabling more or less functionality in part3. For example, we can add a number theory section as the one in wolframalpha, or we can reduce some functionality of the linear algebra library if we find it hard to implement. Lastly, it is worthy of note that this could server as a useful project if it was just part 3 as a cursory search of packages/internet reveals a dearth of useful math libraries (searching for integral or derivatives yields nothing and searching for math yields 3 old linear algebra libraries)... 
 
+
+Backup plan (in case you don't like the first option): Global Thermonuclear War
+
+
+The goal of this project would be to create a game of global thermonuclear war with an AI, as depicted in the movie Wargames. Basically, in real time, the player and the AI would make choices about launching nuclear missiles, bombers, submarines, and the placement of anti-missile defense systems. The game would consist of a map, which displayed the inbound missiles, bombers, subs as well as the world population and cities. The interface for the control of these systems could be a command line or a point/click system. The mechanics of the game would probably be borrowed from a previous command-line version of this that Teo wrote about a year ago for 162. The AI we would have to figure out.
+
+The AI and the main game loop/animations would be the main application of what we have learned in class. The applications of FRP to making the game are obvious. There are select number of things the player or the AI can do and these will translate will to events. The state is just the collection of missiles, subs, bombers, and cities. Obviously, this will be quite a bit more complicated than anything we have done in class, but it should be doable. The animations are also doable with just collage. The AI is hopefully where the data structures would come into play. What exactly we would use is unclear, but we will probably be required to design/use something for the AI.
+
+The AI and animations are the areas where we would be doing some research. For the AI, we would probably need something more complicated than a simple mini-max and the continous aspect of the game would make this harder as it can't take an infinite amount of time to make choices. As for the animations, I'm somewhat curious as to how little forms one can add to a collage before it degrades performance. If I have 30,000 missiles on screen each deploying 8 nukes for a few minutes, does my browser just crash? I'm not sure, but if wolframpha alpha is not an option, we will probably find out and need to mitigate it somehow.
+
+
+The plan of attack is as follows:
+-decide on the game logic
+-Write up events/model
+-Create one API for human and computer usage
+-Divide into one person working on the AI and the other person working on the animations/human controls
+--Join together
+-Play test
+--examine performance issues
+--examine AI issues
