@@ -42,3 +42,5 @@ The plan of attack is as follows:
 -Play test
 --examine performance issues
 --examine AI issues
+
+If need be, we can scale down the scope of the AI or the scope of features of the game (e.g. only missiles instead of subs, bombers, etc). We could also scale either of these up.
