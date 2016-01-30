@@ -1,0 +1,23 @@
+partner: Teo Collin
+
+Project proposal 1: Wolframalpha in Elm
+
+Goals:
+Build a complex algebraic system that can perform a part of the functionalities of wolframalpha including basic arithmetic, calculus (derivatives and integrals), linear algebra (matrix operations, determinant, eigenvalues and eigenvectors, diagonalization, etc), plotting graphs, and so on.
+
+apsects of the project that will build on Elm experience already developed:
+basic functional programming knowledge (algebraic datatype manipulation), the 2D graphics, basic FRP.
+
+aspects of the project that will require additional tools and techniques to implement:
+1 A parser for input (equations, functions, polynomials, matrices, etc)
+2 Html tools that can help build the interface
+
+plan of attack for the project:
+The projects can be divided into four parts:
+1 The internal representation of the expressions we deal with
+2 The parser for parsing the input into the representation we use.
+3 Different functions of processing the parsed input including the calculus library and the linear algebra library
+4 The interface to unparse the expression in Elm to human readable format and possibly graphics for displaying the output
+
+steps that can be expanded or reduced: Since only the part1, part2, and part4 of the projects are absolutely necessarily, we can easily add and expand and reduce the size of the project by enabling more or less functionalities in part3. For example, we can add a number theory section as the one in wolframalpha, or we can reduce some functionalities in the linear algebra library if we find it hard to implement. 
+
