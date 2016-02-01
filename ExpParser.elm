@@ -1,9 +1,12 @@
 module ExpParser where
 
-import OurParser as P exposing (Parser, (*>))
 import Char
+import Maybe exposing (withDefault)
+import Result exposing (toMaybe)
+import String
 
 import Expression exposing (..)
+import OurParser as P exposing (Parser, (*>))
 
 -- switch to haskell syntax
 (+++) = P.or
@@ -44,6 +47,24 @@ integer =
     P.map (*) sign
     |> P.andMap natural
 
+{-| The fromOk function extracts the element out of a Ok, with a default. -}
+fromOk : a -> Result e a -> a
+fromOk default result =
+    withDefault default (toMaybe result)
+                
+{-| Parse a float with optional sign -}
+float : Parser Float
+float =
+    let
+        toFloatString (i, ds) =
+          toString i ++ "." ++ String.concat (List.map toString ds)
+        convertToFloat sig int digs =
+          toFloat sig * (fromOk 0.0 << String.toFloat << toFloatString) (int, digs)
+    in
+        P.map convertToFloat sign
+        |> P.andMap integer
+        |> P.andMap (P.symbol '.' *> P.some digit)
+
 --------------------------------------------------------------
 
 --TODO:
@@ -52,17 +73,17 @@ integer =
 -- expand parseExp to include all Ops
 
 token1 : a -> String -> Parser a
-token1 val str = P.recursively <| \_ -> skipSpaces *> (always val <$> P.token str)
+token1 val str = skipSpaces *> (always val <$> P.token str)
                 
 parseInt : Parser Exp
 parseInt = skipSpaces *> (EInt <$> integer)
-{-
+
 parseFloat : Parser Exp
-parseFloat = skipSpaces *> (EFloat <$> Num.float)
+parseFloat = skipSpaces *> (EFloat <$> float)
 
 parseNum : Parser Exp
-parseNum = P.recursively <| \_ -> parseInt +++ parseFloat
--}
+parseNum = P.recursively <| \_ -> parseFloat <++ parseInt
+
 isSpace : Char -> Bool
 isSpace a  = a == ' ' || a == '\n' || a == '\t'
              
@@ -71,6 +92,7 @@ skipSpaces = P.map (\_ -> ()) <| P.many <| P.satisfy isSpace
 
 parens : Parser a -> Parser a
 parens p =
+  skipSpaces *>
   P.token "(" *>
   skipSpaces *>
   p >>= \x ->
@@ -110,7 +132,7 @@ opStr s =
     "*" -> Mult
     "/" -> Frac
     "logBase" -> LogBase
-    _ -> Debug.crash <| "strOp: " ++ s
+    _ -> Debug.crash <| "opStr: " ++ s
         
 parseExp : Parser Exp
 parseExp = P.recursively <| \_ ->
@@ -120,7 +142,7 @@ parseExp = P.recursively <| \_ ->
         prec1 = P.recursively <| \_ -> P.chainl1 prec2 <|
         (token1 (EBinaryOp Mult) "*")
         <++ (token1 (EBinaryOp Frac) "/")
-        prec2 = P.recursively <| \_ -> parseInt <++ parens prec0
+        prec2 = P.recursively <| \_ -> parseNum <++ parens prec0
    in prec0
       
-test = P.parse parseExp "(3 + 4) * 5"
+test = P.parseAll parseExp "2 * (4 + 3)"

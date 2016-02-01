@@ -1,4 +1,6 @@
 --the elm parser library, modified for our use
+-- TODO : add more functionalities if necessary
+
 module OurParser where
 
 {-| A simple parser combinator library.
