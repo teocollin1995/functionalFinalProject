@@ -8,6 +8,7 @@ type Exp =
   EBinaryOp Op Exp Exp
   | EUnaryOP Op Exp
   | EConst Op
+  | Variable String --
   | EInt Int
   | EFloat Float
   | EComplex Float Float
