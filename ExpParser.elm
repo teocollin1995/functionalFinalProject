@@ -82,7 +82,7 @@ parseFloat : Parser Exp
 parseFloat = skipSpaces *> (EFloat <$> float)
 
 parseNum : Parser Exp
-parseNum = P.recursively <| \_ -> parseFloat <++ parseInt
+parseNum = parseFloat <++ parseInt
 
 isSpace : Char -> Bool
 isSpace a  = a == ' ' || a == '\n' || a == '\t'
@@ -92,13 +92,7 @@ skipSpaces = P.map (\_ -> ()) <| P.many <| P.satisfy isSpace
 
 parens : Parser a -> Parser a
 parens p =
-  skipSpaces *>
-  P.token "(" *>
-  skipSpaces *>
-  p >>= \x ->
-  skipSpaces *>
-  P.token ")" *>
-  P.succeed x
+  P.between (skipSpaces *> P.token "(") (skipSpaces *> P.token ")") p
    
 parseConst : Parser Exp
 parseConst =
@@ -142,7 +136,7 @@ parseExp = P.recursively <| \_ ->
         prec1 = P.recursively <| \_ -> P.chainl1 prec2 <|
         (token1 (EBinaryOp Mult) "*")
         <++ (token1 (EBinaryOp Frac) "/")
-        prec2 = P.recursively <| \_ -> parseNum <++ parens prec0
+        prec2 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
    in prec0
       
-test = P.parseAll parseExp "2 * (4 + 3)"
+test = P.parseAll parseExp "pi * (4 + 3)"

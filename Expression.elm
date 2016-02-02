@@ -37,8 +37,8 @@ type Op =
    | Sin | Cos | Tan | ArcSin | ArcCos | ArcTan
    | Floor | Ceiling | Round
    | Sqrt | Log
-   | Re | Img --real and imaginary part
-   | Abs --absolute value
+   | Re | Img 
+   | Abs 
    -- binary ops
    | Plus | Minus | Mult | Frac
    | Pow | Mod

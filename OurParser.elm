@@ -232,7 +232,13 @@ chainr1 p op =
     in
       p `andThen` rest
 
-      
+between : Parser open -> Parser close -> Parser a -> Parser a
+between open close p =
+  open *>
+  p `andThen` \a ->
+  close *>
+  succeed a
+          
 {-| Variant of `map` that ignores the result of the parser -}
 (<$) : result -> Parser x -> Parser result
 (<$) f p =
