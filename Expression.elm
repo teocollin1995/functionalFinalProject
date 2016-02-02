@@ -8,8 +8,8 @@ type Exp =
   EBinaryOp Op Exp Exp
   | EUnaryOP Op Exp
   | EConst Op
-  | Variable String --
-  | EInt Int
+  | Variable String
+  | EInt Int 
   | EFloat Float
   | EComplex Float Float
   | EPoly Poly
@@ -23,11 +23,6 @@ type alias Vector a = Array a
 --type alias ColVector a = Vector a
 type alias Matrix a = Vector (Vector a)
 
-
--- initVectorSample : Int -> Vector Exp
--- initVectorSample a = Array.initialize a (\x -> EInt x)
--- initMatrixSample : Int -> Matrix Exp
--- initMatrixSample a = Array.initialize a (\x -> initVectorSample a)
 
 -- Op refers to built in functions/constant
 type Op =
@@ -43,5 +38,14 @@ type Op =
    | Plus | Minus | Mult | Frac
    | Pow | Mod
    | LogBase
-   | Derv --We may want people to be able to add these in with other expressions? 
+   --| Derv --We may want people to be able to add these in with other expressions? - we will add this when we write the differentiator
    
+
+
+simplify : Exp -> Exp
+simplify exp = exp
+
+evaluate : List (String) -> List (Float) -> Exp -> Result String (Exp) -- gives us some freedom to deal with partial evaluations
+evaluate variables values exp = Ok exp
+    
+    
