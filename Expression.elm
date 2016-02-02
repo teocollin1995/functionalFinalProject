@@ -13,8 +13,8 @@ type Exp =
   | EFloat Float
   | EComplex Float Float
   | EPoly Poly
-  | Matrix Exp
-  | Vector Exp
+  | EMatrix (Matrix Exp)
+  | EVector (Vector Exp)
 
 type Poly = List Mono
 type alias Mono = { coeff : Float, var: String, pow: Int}
