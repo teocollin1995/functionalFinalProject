@@ -90,6 +90,11 @@ arg c =
   case (c.re, c.img) of 
     (0,0) -> 0 
     (x,y) -> atan2 y x
---ln : Complex -> (Int -> Complex)
---ln z = 
-  
+
+ln : Complex -> (Int -> Complex)
+ln z = 
+  \k -> {re = logBase (Basics.e) (abs z), img = (arg z) + 2 * Basics.pi * (toFloat k)}
+
+exp : Complex -> Complex
+exp c = 
+  mult {re = Basics.e ^(real c), img = 0} (euler (imaginary c))
