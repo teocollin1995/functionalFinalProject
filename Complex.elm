@@ -6,7 +6,6 @@ type alias Complex = {re : Float, img: Float}
 real : Complex -> Float
 real c = c.re
 
-
 imaginary : Complex -> Float
 imaginary c = c.img
 
@@ -69,3 +68,28 @@ sqrt c1 =
   delta = (((-1) * c1.re + (abs c1)) /2)^(0.5)
   in
     ({re=gamma, img=delta}, {re= (-1)*gamma, img= (-1)* delta})
+
+
+euler : Float -> Complex
+euler x = 
+  {re=cos x, img =sin x}
+  
+--https://hackage.haskell.org/package/base-4.8.2.0/docs/src/GHC.Float.html#atan2
+atan2 y x = 
+  if x > 0 then atan (y/x)
+  else if x == 0 && y > 0 then pi / 2
+  else if x < 0 && y > 0 then pi + atan (y/x)
+  else if (x <= 0 && y < 0 ) then 0 - (atan2 (-y) x)
+  else if (y == 0 && (x < 0)) then pi
+  else if x == 0 && y == 0 then y
+  else x+y
+  
+
+arg : Complex -> Float
+arg c = 
+  case (c.re, c.img) of 
+    (0,0) -> 0 
+    (x,y) -> atan2 y x
+--ln : Complex -> (Int -> Complex)
+--ln z = 
+  
