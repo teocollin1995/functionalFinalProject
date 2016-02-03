@@ -1,5 +1,6 @@
 module Expression where
 import Array exposing (Array)
+import Complex
 --see http://infoscience.epfl.ch/record/169879/files/RMTrees.pdf for array implementation detail
 --in any event, if we really need to, the javascript ffi turns these arrays into javascript arrays
 --so we can keep the representation the same even if we end up using it
@@ -11,7 +12,7 @@ type Exp =
   | Variable String
   | EInt Int 
   | EFloat Float
-  | EComplex Float Float
+  | EComplex Complex.Complex 
   | EPoly Poly
   | EMatrix (Matrix Exp)
   | EVector (Vector Exp)
