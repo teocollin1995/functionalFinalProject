@@ -7,7 +7,7 @@ import Complex
 
 type Exp =
   EBinaryOp Op Exp Exp
-  | EUnaryOP Op Exp
+  | EUnaryOp Op Exp
   | EConst Op
   | Variable String
   | EInt Int 
@@ -28,7 +28,7 @@ type alias Matrix a = Vector (Vector a)
 -- Op refers to built in functions/constant
 type Op =
    -- constants
-   Pi | E
+   Pi | E | I
    -- unary ops
    | Sin | Cos | Tan | ArcSin | ArcCos | ArcTan
    | Floor | Ceiling | Round
@@ -38,7 +38,6 @@ type Op =
    -- binary ops
    | Plus | Minus | Mult | Frac
    | Pow | Mod
-   | LogBase
    --| Derv --We may want people to be able to add these in with other expressions? - we will add this when we write the differentiator
    
 
@@ -46,7 +45,7 @@ type Op =
 simplify : Exp -> Exp
 simplify exp = exp
 
-evaluate : List (String) -> List (Float) -> Exp -> Result String (Exp) -- gives us some freedom to deal with partial evaluations
+evaluate : List String -> List Float -> Exp -> Result String Exp -- gives us some freedom to deal with partial evaluations
 evaluate variables values exp = Ok exp
     
     

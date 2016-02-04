@@ -21,8 +21,8 @@ absC : Complex -> Complex
 absC c = 
   {re = abs c, img = 0}
 
-conjurage : Complex -> Complex
-conjurage c1 = 
+conjugage : Complex -> Complex
+conjugage c1 = 
   {re = c1.re, img = (-1)*c1.img}
 
 
