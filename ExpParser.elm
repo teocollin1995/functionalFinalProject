@@ -72,6 +72,9 @@ float =
 -- include the parser for float
 -- expand parseExp to include all Ops
 
+intOrFloat : Parser Float
+intOrFloat = float <++ (toFloat <$> integer)
+             
 token1 : a -> String -> Parser a
 token1 val str = skipSpaces *> (always val <$> P.token str)
                 
@@ -80,9 +83,19 @@ parseInt = skipSpaces *> (EInt <$> integer)
 
 parseFloat : Parser Exp
 parseFloat = skipSpaces *> (EFloat <$> float)
+            
+parseComplex : Parser Exp
+parseComplex =
+  skipSpaces *>
+  intOrFloat >>= \a ->
+  P.token "+" *>
+  skipSpaces  *>
+  intOrFloat >>= \b ->
+  P.token "i" *>
+  P.succeed (EComplex {re = a, im = b})
 
 parseNum : Parser Exp
-parseNum = parseFloat <++ parseInt
+parseNum = parseComplex <++ parseFloat <++ parseInt
 
 isSpace : Char -> Bool
 isSpace a  = a == ' ' || a == '\n' || a == '\t'
@@ -93,17 +106,37 @@ skipSpaces = P.map (\_ -> ()) <| P.many <| P.satisfy isSpace
 parens : Parser a -> Parser a
 parens p =
   P.between (skipSpaces *> P.token "(") (skipSpaces *> P.token ")") p
-   
+
+maybeParens : Parser a -> Parser a
+maybeParens p =
+  P.between (skipSpaces *> (P.optional1 <| P.token "(")) (skipSpaces *> (P.optional1 <| P.token ")")) p
+                                                                     
 parseConst : Parser Exp
 parseConst =
      ((\_ -> EConst Pi) <$> P.token "pi")
  <++ ((\_ -> EConst E) <$> P.token "e")
 
+parseUOp : Parser (Exp -> Exp)
+parseUOp = skipSpaces *>
+  ((token1 (EUnaryOp Sin) "sin")
+  <++ (token1 (EUnaryOp Cos) "cos")
+  <++ (token1 (EUnaryOp Tan) "tan")
+  <++ (token1 (EUnaryOp ArcSin) "arcsin")
+  <++ (token1 (EUnaryOp ArcTan) "arctan")
+  <++ (token1 (EUnaryOp ArcCos) "arccos")
+  <++ (token1 (EUnaryOp Floor) "floor")
+  <++ (token1 (EUnaryOp Ceiling) "ceiling")
+  <++ (token1 (EUnaryOp Round) "round")
+  <++ (token1 (EUnaryOp Sqrt) "sqrt")
+  <++ (token1 (EUnaryOp Re) "re")
+  <++ (token1 (EUnaryOp Im) "im")
+  <++ (token1 (EUnaryOp Abs) "abs"))
+
 allOps : List String
 allOps =
   ["pi","e"
   ,"sin", "cos", "tan", "arcsin", "arccos", "arctan", "floor","ceiling","round","sqrt","log"
-  , "+","-","*","/", "logBase"]
+  , "+","-","*","/"]
 
 opStr : String -> Op
 opStr s =
@@ -125,18 +158,21 @@ opStr s =
     "-" -> Minus
     "*" -> Mult
     "/" -> Frac
-    "logBase" -> LogBase
     _ -> Debug.crash <| "opStr: " ++ s
         
 parseExp : Parser Exp
 parseExp = P.recursively <| \_ ->
    let  prec0 = P.recursively <| \_ -> P.chainl1 prec1 <|
-        (token1 (EBinaryOp Plus) "+")
-        <++ (token1 (EBinaryOp Minus) "-")
+                (token1 (EBinaryOp Plus) "+")
+                 <++ (token1 (EBinaryOp Minus) "-")
         prec1 = P.recursively <| \_ -> P.chainl1 prec2 <|
-        (token1 (EBinaryOp Mult) "*")
-        <++ (token1 (EBinaryOp Frac) "/")
-        prec2 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
+                (token1 (EBinaryOp Mult) "*")
+                <++ (token1 (EBinaryOp Frac) "/")  
+        prec2 = P.recursively <| \_ -> P.chainl1 prec3 <|
+                (token1 (EBinaryOp Pow) "^")
+                <++ (token1 (EBinaryOp Mod) "%")
+        prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
+        prec4 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
    in prec0
       
-test = P.parseAll parseExp "pi * (4 + 3)"
+test = P.parse parseExp "(4+3i)*(2+3i)"
