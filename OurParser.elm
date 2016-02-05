@@ -111,7 +111,7 @@ optional p x =
 
 -- optionally parse p and return ()
 optional1 : Parser result -> Parser ()
-optional1 p = (map (\_ -> ()) p) `or` succeed ()
+optional1 p = (map (\_ -> ()) p) `left_or` succeed ()
               
 {-| Parses zero or more occurences of a parser -}
 many : Parser result -> Parser (List result)
@@ -235,10 +235,14 @@ chainr1 p op =
           succeed (f x y)) `or` succeed x 
     in
       p `andThen` rest
-{-
+
 prefix : Parser a -> Parser (a -> a) -> Parser a
-prefix p op = p `left_or` (op `andMap` prefix p op)
- -}   
+prefix p op = p `left_or`
+              (op `andThen` \f ->
+              prefix p op `andThen` \x ->
+              succeed <| f x)
+
+              
 between : Parser open -> Parser close -> Parser a -> Parser a
 between open close p =
   open *>
