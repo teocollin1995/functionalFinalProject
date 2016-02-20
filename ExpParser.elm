@@ -175,4 +175,4 @@ parseExp = P.recursively <| \_ ->
         prec4 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
    in prec0
       
-test = P.parse parseExp "(4+3i)*(2+3i)"
+test = P.parse parseExp "sin(2+3i)"
