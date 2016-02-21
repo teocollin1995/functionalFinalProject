@@ -97,3 +97,6 @@ ln z =
 exp : Complex -> Complex
 exp c = 
   mult {re = Basics.e ^(real c), im = 0} (euler (imaginary c))
+
+toComplex : Float -> Complex
+toComplex x = {re = x, im = 0}
