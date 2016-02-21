@@ -1,6 +1,11 @@
 module Complex where
 
 import Expression exposing (Complex)
+i : Complex
+i = {re = 0, im = 1}
+one : Complex
+one = {re = 1, im = 0}
+
 
 real : Complex -> Float
 real c = c.re
@@ -75,7 +80,7 @@ sqrt c1 =
 
 euler : Float -> Complex
 euler x = 
-  {re=cos x, im=sin x}
+  {re=cos x, im=sin x }
   
 --https://hackage.haskell.org/package/base-4.8.2.0/docs/src/GHC.Float.html#atan2
 atan2 : number -> number' -> Float
@@ -110,3 +115,28 @@ pow z w = exp  ({re=logBase (Basics.e) (abs z), im=(arg z)} `mult` w)
 toComplex : Float -> Complex
 toComplex x = {re = x, im = 0}
 
+
+ccos : Complex -> Complex 
+ccos z = div (add (exp (mult i z)) (exp (negation (mult i z)))) {re = 2, im = 0}
+
+csin : Complex -> Complex
+csin z =  div (sub (exp (mult i z)) (exp (negation (mult i z)))) {re = 0, im = 2}
+
+ctan : Complex -> Complex
+ctan z = 
+  let
+    num = mult i (sub (exp (negation (mult i z))) (exp ( (mult i z))))
+    den = (add (exp (negation (mult i z))) (exp ( (mult i z))))
+  in
+    div num den
+
+
+casin : Complex -> (Int -> Complex)
+casin z = \k -> mult (negation i) (ln (add (mult i z) (pow (sub one (pow z {re=2,im =0})) {re=0.5, im=0})) k)
+
+cacos : Complex -> (Int -> Complex)
+cacos z = \k -> sub {re=Basics.pi/2, im =0} (casin z k)
+
+
+catan : Complex -> (Int -> Complex)
+catan z = \k ->  mult (mult i {re = 0.5, im = 0}) (sub (ln (sub one (mult i z)) k) (ln (add one (mult i z)) k))
