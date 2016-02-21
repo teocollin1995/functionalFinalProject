@@ -23,8 +23,6 @@ eval e =
       f res1 res2
     _ -> e
 
--- TODO : incorporate other operators that have type conflicts with the type signature
-
 realfunc : Op -> (Float -> Float) -> Exp -> Exp
 realfunc op f e =
   case e of
@@ -65,7 +63,6 @@ unparseUOp op =
     Im  -> bar C.imaginary
     _  -> Debug.crash "unParseUOp"
 
--- TODO: same as unparseBOp
 unparseBOp : Op -> Exp -> Exp -> Exp
 unparseBOp op =
   let foo = realAndComplex op in
