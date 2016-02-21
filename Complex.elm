@@ -103,10 +103,10 @@ exp : Complex -> Complex
 exp c = 
   mult {re = Basics.e ^(real c), im = 0} (euler (imaginary c))
 
-<<<<<<< HEAD
+
 pow : Complex -> Complex -> Complex
 pow z w = exp  ({re=logBase (Basics.e) (abs z), im=(arg z)} `mult` w)
-=======
+
 toComplex : Float -> Complex
 toComplex x = {re = x, im = 0}
->>>>>>> 287994b0c91a2bfc5a1d83a39ea3e22830b96f89
+
