@@ -77,12 +77,9 @@ intOrFloat = float <++ (toFloat <$> integer)
              
 token1 : a -> String -> Parser a
 token1 val str = skipSpaces *> (always val <$> P.token str)
-                
-parseInt : Parser Exp
-parseInt = skipSpaces *> (EInt <$> integer)
 
-parseFloat : Parser Exp
-parseFloat = skipSpaces *> (EFloat <$> float)
+parseReal : Parser Exp
+parseReal = skipSpaces *> (EReal <$> float)
             
 parseComplex : Parser Exp
 parseComplex =
@@ -95,7 +92,7 @@ parseComplex =
   P.succeed (EComplex {re = a, im = b})
 
 parseNum : Parser Exp
-parseNum = parseComplex <++ parseFloat <++ parseInt
+parseNum = parseComplex <++ parseReal
 
 isSpace : Char -> Bool
 isSpace a  = a == ' ' || a == '\n' || a == '\t'
@@ -175,4 +172,4 @@ parseExp = P.recursively <| \_ ->
         prec4 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
    in prec0
       
-test = P.parse parseExp "(4+3i)*(2+3i)"
+test = P.parse parseExp "sin(2+3i)"

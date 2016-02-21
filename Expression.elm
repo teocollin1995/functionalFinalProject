@@ -9,8 +9,8 @@ type Exp =
   | EUnaryOp Op Exp
   | EConst Op
   | Variable String
-  | EInt Int 
-  | EFloat Float
+  --| EInt Int 
+  | EReal Float
   | EComplex Complex 
   | EPoly Poly
   | EMatrix (Matrix Exp)
