@@ -5,6 +5,10 @@ import Expression exposing (Complex)
 real : Complex -> Float
 real c = c.re
 
+fromReal : Float -> Complex
+fromReal r = 
+  {re = r, im = 0}
+
 imaginary : Complex -> Float
 imaginary c = c.im
 
@@ -74,6 +78,7 @@ euler x =
   {re=cos x, im=sin x}
   
 --https://hackage.haskell.org/package/base-4.8.2.0/docs/src/GHC.Float.html#atan2
+atan2 : number -> number' -> Float
 atan2 y x = 
   if x > 0 then atan (y/x)
   else if x == 0 && y > 0 then pi / 2
@@ -97,3 +102,6 @@ ln z =
 exp : Complex -> Complex
 exp c = 
   mult {re = Basics.e ^(real c), im = 0} (euler (imaginary c))
+
+pow : Complex -> Complex -> Complex
+pow z w = exp  ({re=logBase (Basics.e) (abs z), im=(arg z)} `mult` w)
