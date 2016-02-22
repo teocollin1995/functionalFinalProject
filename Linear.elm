@@ -7,10 +7,14 @@ import List
 import List.Extra as ListE
 import Array.Extra as ArrayE
 
+
+type alias Space a = {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a}
+
+complexSpace : Space Expression.Complex
+complexSpace = {zero= Complex.one, one= Complex.zero, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal}
+
 --Todo:
 --Clean up code
---generalize for expressions -> most helpers are fully general -> det is in complex only -> most higher level things are in float
---I've decided to rethink how to generalize anythign to make the code less clunky -> we really only need add, mult, negate, div, zero, and one so a data type could be made out of it
 --write tests
 --https://en.wikipedia.org/wiki/Crout_matrix_decomposition
 --crout : Matrix Float -> (Matrix Float, Matrix Float, Matrix Float) lower,upper,permutation
@@ -25,15 +29,16 @@ import Array.Extra as ArrayE
 
 --helpers
 unsafeGet :  Int -> Array a -> a
-unsafeGet i a  = 
-  case (Array.get i a) of 
-    Just x -> x
-    _ -> Debug.crash "index out of range"
+unsafeGet i a  = ArrayE.getUnsafe i a
 
 arraymap2 : (a -> b -> c) -> Array a -> Array b -> Array c
 arraymap2 = ArrayE.map2
 
 
+taker : Int -> List a -> List (List a)
+taker x ls =  case ls of 
+                [] -> []
+                _ -> (List.take x ls) :: (taker x (List.drop x ls))
 --generators
 
 vector : Int -> (Int -> a) -> Vector a 
@@ -75,10 +80,11 @@ map f m = Array.map (Array.map f) m
 indexedMap : (Int -> Int -> a -> b) -> Matrix a -> Matrix b
 indexedMap f m = Array.indexedMap (\r -> Array.indexedMap (\c v -> f r c v) ) m
 
---definining triangular as 
-isTriangular : b -> Matrix b -> Bool
-isTriangular zero m1 = 
+
+isTriangular : Space b -> Matrix b -> Bool
+isTriangular space m1 = 
   let
+    zero = space.zero
     tester1 = \row col v -> if row == col then v /= zero else if row > col then v == zero else  True
   in
     if (List.all (\x -> x) (toList (indexedMap tester1 m1 ))) then True
@@ -94,10 +100,6 @@ vectorFromList : (List a) -> Vector a
 vectorFromList = Array.fromList
 
 
-taker : Int -> List a -> List (List a)
-taker x ls =  case ls of 
-                [] -> []
-                _ -> (List.take x ls) :: (taker x (List.drop x ls))
 
 
 fromList : (List a) -> Int -> Int -> Matrix a
@@ -257,28 +259,33 @@ same row col s =
   Array.repeat row (Array.repeat col s)
 
 
-identity : Int -> a -> a -> Matrix a
-identity n zero one = matrix n n (\x y -> if x == y then one else zero)
+identity : Space a -> Int ->  Matrix a
+identity space n = 
+  let
+    zero = space.zero
+    one = space.one 
+  in
+    matrix n n (\x y -> if x == y then one else zero)
 
-isIdentity : a -> a -> Matrix a -> Bool
-isIdentity zero one m =
+isIdentity : Space a-> Matrix a -> Bool
+isIdentity space m =
   let
     (rows,cols) = dimM m
   in
     if rows /= cols then False 
     else
-      m == (identity rows zero one)
+      m == (identity space rows )
 
-permMatrix : Int -> Int -> Int -> a -> a -> Matrix a
-permMatrix size i j zero one = columnSwap i j (identity size zero one)
+permMatrix : Space a -> Int -> Int -> Int -> Matrix a
+permMatrix space size i j = columnSwap i j (identity space size )
 
-allpermutationMatricies : Int -> a -> a -> List (Matrix a)
-allpermutationMatricies size zero one = 
+allpermutationMatricies :Space a -> Int -> a -> a -> List (Matrix a)
+allpermutationMatricies space size zero one = 
   let 
     xs = [0..(size-1)]
     perms = ListE.permutations xs
     switches = List.map (List.map2 (,) xs) perms
-    id = identity size zero one
+    id = identity space size 
     setFromid = \(i,j) m -> setCol j (unsafeGetCol i id) m
     --makeSwap = \(i,j) m -> columnSwap i j m 
     makeAllSwaps = List.foldr (setFromid) id 
@@ -314,6 +321,9 @@ horizontalSplit i m =
    else
      (submatrix 0 rows 0 i m , submatrix 0 rows i cols m)
 
+
+---vertical split
+
 splitBlocks : Int -> Int -> Matrix a -> (Matrix a, Matrix a, Matrix a, Matrix a) --row, col, matrix, (tl,tr,bl,br)
 splitBlocks row col m = 
   let
@@ -348,25 +358,32 @@ horizontalJoin m1 m2 =
 elementWise : (a -> b -> c) -> Matrix a -> Matrix b -> Matrix c 
 elementWise f m1 m2 = ArrayE.map2 (\a b -> ArrayE.map2 f a b) m1 m2
 
-scaleMatrix : a -> (a -> a -> a) -> Matrix a -> Matrix a
-scaleMatrix scalar mult m = map (mult scalar) m
+scaleMatrix : Space a -> a -> Matrix a -> Matrix a
+scaleMatrix space scalar m = map (space.mult scalar) m
 
-scaleVector : a -> (a -> a -> a) -> Vector a -> Vector a
-scaleVector scalar mult m = Array.map (mult scalar) m
+scaleVector : Space a -> a -> Vector a -> Vector a
+scaleVector space scalar m = Array.map (space.mult scalar) m
 --Array.map2
 
     
-addToVector : a -> (a -> a -> a) -> Vector a -> Vector a
-addToVector a add v = Array.map (add a) v
+addToVector : Space a -> a -> Vector a -> Vector a
+addToVector space a v = Array.map (space.add a) v
 
-addVector : (a -> a -> a) -> Vector a -> Vector a -> Vector a
-addVector add = arraymap2 add 
+addVector : Space a -> Vector a -> Vector a -> Vector a
+addVector space = ArrayE.map2 space.add 
 
-scaleRow : Int -> a -> (a -> a -> a) -> Matrix a -> Matrix a
-scaleRow i scalar mult m = indexedMapRow (\r v -> if r==i then scaleVector scalar mult v else v  ) m
+scaleRow : Space a -> Int -> a  -> Matrix a -> Matrix a
+scaleRow space i scalar m = indexedMapRow (\r v -> if r==i then scaleVector space scalar v else v  ) m
+
+
 --add checking for outofbounds...
-combineRow : a -> (a -> a -> a) -> (a -> a -> a) -> Int -> Int -> Matrix a -> Matrix a 
-combineRow scalar mult add target origin m = setRow target (addVector add (unsafeGetRow target m) (Array.map (mult scalar) (unsafeGetRow origin m))) m
+combineRow : Space a -> a -> Int -> Int -> Matrix a -> Matrix a 
+combineRow space scalar target origin m = 
+  let
+    add = space.add
+    mult = space.mult
+  in
+    setRow target (addVector space (unsafeGetRow target m) (Array.map (mult scalar) (unsafeGetRow origin m))) m
 
 switchRow : Int -> Int -> Matrix a -> Matrix a 
 switchRow row1 row2 m = 
@@ -378,66 +395,72 @@ switchRow row1 row2 m =
 
 --switchCols: Probably not needed... we will stick to row operations 
 
-invert : Matrix Float -> Maybe (Matrix Float)
-invert m1 = 
+invert : Space a -> Matrix a -> Maybe (Matrix a)
+invert space m1 = 
   let
     (rows, cols) = dimM m1
   in
     if rows /= cols then Nothing
     else
       let
-        id = identity rows 0 1
+        id = identity space rows
         newmatrix = horizontalJoin m1 id
-        reduced = rowReduce newmatrix
+        reduced = rowReduce space newmatrix
         blocks = horizontalSplit rows reduced
       in
-        if (isIdentity 0 1 (fst blocks)) then Just (snd blocks) else Nothing
+        if (isIdentity space (fst blocks)) then Just (snd blocks) else Nothing
 
-invertable : Matrix Float -> Bool
-invertable m1 = case (invert m1) of 
+invertable : Space a -> Matrix a -> Bool
+invertable space m1 = case (invert space m1) of 
                   Nothing -> False
                   _ -> True
 
 
-rowReduce : Matrix Float -> Matrix Float
-rowReduce m1 = gaussianEliminationBackwards (gaussianEliminationForward m1)
+rowReduce : Space a ->  Matrix a -> Matrix a
+rowReduce space m1 = gaussianEliminationBackwards space (gaussianEliminationForward space m1)
 
 
 --naming inconsistnecy! 
-gaussianEliminationForward : Matrix Float -> Matrix Float
-gaussianEliminationForward m =
+gaussianEliminationForward : Space a -> Matrix a -> Matrix a
+gaussianEliminationForward space m =
   let
     (rows, cols) = dimM m
     elims = (min rows cols) - 1
   in
-    gaussianEliminationHelper' 0 elims m
+    gaussianEliminationHelper' space 0 elims m
 
-gaussianEliminationBackwards : Matrix Float -> Matrix Float
-gaussianEliminationBackwards m = 
+gaussianEliminationBackwards : Space a -> Matrix a -> Matrix a
+gaussianEliminationBackwards space m = 
   let
     (rows, cols) = dimM m
     elims = (min rows cols) - 1
   in
-    gaussianEliminationHelperBackwards' elims m
+    gaussianEliminationHelperBackwards' space elims m
 
-gaussianEliminationHelperBackwards' : Int -> Matrix Float -> Matrix Float
-gaussianEliminationHelperBackwards' row m =
-  if row < 0 then m else gaussianEliminationHelperBackwards' (row - 1) (gaussianEliminationHelperBackwards row m)
+gaussianEliminationHelperBackwards' : Space a -> Int -> Matrix a -> Matrix a
+gaussianEliminationHelperBackwards' space row m =
+  if row < 0 then m else gaussianEliminationHelperBackwards' space (row - 1) (gaussianEliminationHelperBackwards space row m)
 
-gaussianEliminationHelper' : Int -> Int -> Matrix Float -> Matrix Float
-gaussianEliminationHelper' row max m = -- should just be foldr
-  if row > max then m else gaussianEliminationHelper' (row + 1 ) max (gaussianEliminationHelper row m)
+gaussianEliminationHelper' : Space a -> Int -> Int -> Matrix a -> Matrix a
+gaussianEliminationHelper' space row max m = -- should just be foldr
+  if row > max then m else gaussianEliminationHelper' space (row + 1 ) max (gaussianEliminationHelper space row m)
 
-gaussianEliminationHelper : Int -> Matrix Float -> Matrix Float
-gaussianEliminationHelper row m = 
+gaussianEliminationHelper : Space a -> Int -> Matrix a -> Matrix a
+gaussianEliminationHelper space row m = 
   let
+    zero = space.zero
+    div = space.div
+    one = space.one
+    recip = space.div space.one
+    sub = space.sub
+    neg = space.sub space.zero
     (rows, cols) = dimM m
     currow = unsafeGetRow row m
     pivot = ArrayE.getUnsafe row currow 
-    pivotedMatrix = if pivot /= 0.0 then Just m 
+    pivotedMatrix = if pivot /= zero then Just m 
                     else let
                       colbelow = Array.slice (row + 1) (rows + 1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row m))
-                      firstNonzero = Array.slice 0 1 (Array.filter (\x -> (snd x) /= 0) colbelow )
+                      firstNonzero = Array.slice 0 1 (Array.filter (\x -> (snd x) /= zero) colbelow )
                    in
                      if Array.length firstNonzero == 0 then Nothing
                      else 
@@ -449,22 +472,28 @@ gaussianEliminationHelper row m =
     case pivotedMatrix of 
       Nothing -> m
       Just m -> let
-        onePivotedMatrix = scaleRow row (1/pivot) (*) m --maybe I should clean this line up?
-        targets = (Array.filter (\x -> (snd x) /= 0) (Array.slice (row+1) (rows+1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
+        onePivotedMatrix = scaleRow space row (recip pivot) m --maybe I should clean this line up?
+        targets = (Array.filter (\x -> (snd x) /= zero) (Array.slice (row+1) (rows+1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
      in
-        (Array.foldr (\ (x,y) m ->  combineRow (0 - y) (*) (+) x row m ) onePivotedMatrix targets)
+        (Array.foldr (\ (x,y) m ->  combineRow space (neg y) x row m ) onePivotedMatrix targets)
                    
         
-gaussianEliminationHelperBackwards : Int -> Matrix Float -> Matrix Float
-gaussianEliminationHelperBackwards row m = 
+gaussianEliminationHelperBackwards : Space a -> Int -> Matrix a -> Matrix a
+gaussianEliminationHelperBackwards space row m = 
   let
+    zero = space.zero
+    div = space.div
+    one = space.one
+    recip = space.div space.one
+    sub = space.sub
+    neg = space.sub space.zero
     (rows, cols) = dimM m
     currow = unsafeGetRow row m
     pivot = ArrayE.getUnsafe row currow 
-    pivotedMatrix = if pivot /= 0.0 then Just m 
+    pivotedMatrix = if pivot /= zero then Just m 
                     else let
                       colabove = Array.slice (0) (rows - 1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row m))
-                      firstNonzero = Array.slice 0 1 (Array.filter (\x -> (snd x) /= 0) colabove )
+                      firstNonzero = Array.slice 0 1 (Array.filter (\x -> (snd x) /= zero) colabove )
                    in
                      if Array.length firstNonzero == 0 then Nothing
                      else 
@@ -476,21 +505,21 @@ gaussianEliminationHelperBackwards row m =
     case pivotedMatrix of 
       Nothing -> m
       Just m -> let
-        onePivotedMatrix = scaleRow row (1/pivot) (*) m --maybe I should clean this line below up?
-        targets = (Array.filter (\x -> (snd x) /= 0 && (fst x) /= row) (Array.slice (0) (rows - 1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
+        onePivotedMatrix = scaleRow space row (recip pivot) m --maybe I should clean this line below up?
+        targets = (Array.filter (\x -> (snd x) /= zero && (fst x) /= row) (Array.slice (0) (rows - 1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
      in
-        (Array.foldr (\ (x,y) m ->  combineRow (0 - y) (*) (+) x row m ) onePivotedMatrix targets)
+        (Array.foldr (\ (x,y) m ->  combineRow space (neg y) x row m ) onePivotedMatrix targets)
         
                       
                       
              
 
 
-trace : a -> (a -> a -> a) -> Matrix a -> a
-trace zero add m = Array.foldr add zero (unsafeGetDiag m)
+trace : Space a -> Matrix a -> a
+trace space m = Array.foldr space.add space.zero (unsafeGetDiag m)
 
-diagProd : a -> (a -> a -> a) -> Matrix a -> a
-diagProd one mult m = Array.foldr mult one (unsafeGetDiag m)
+diagProd : Space a -> Matrix a -> a
+diagProd space m = Array.foldr space.mult space.one (unsafeGetDiag m)
 
 --returns the minor and the member of the top row at x and the sign
 minor : Int  -> Matrix a  -> (a, Float, Matrix a)
@@ -513,8 +542,8 @@ minors m =
 -- rephrase in more general terms i.e with add/mult.zero 
 
 
-simpleDet : Matrix (Expression.Complex) -> Expression.Complex
-simpleDet m = 
+simpleDet : Space a -> Matrix a -> a
+simpleDet space m = 
   let 
     (rows, cols) = (dimM m)
   in
@@ -526,19 +555,26 @@ simpleDet m =
              c = unsafeGetM 1 0 m
              d = unsafeGetM 1 1 m 
            in
-             (a `Complex.mult` d `Complex.sub` b `Complex.mult` c)
+             (space.sub (space.mult a d) (space.mult b c))
          else
-           Array.foldr (\(p, sgn, sub) start -> start `Complex.add` (Complex.fromReal sgn) `Complex.mult` p `Complex.mult` (simpleDet sub)) (Complex.fromReal 0) (minors m)
+           let
+             folder = ( \ (p, sgn, sub) start -> space.add start (space.mult (space.fromReal sgn) (space.mult p (simpleDet space sub))))
+           in
+             Array.foldr folder (space.fromReal 0) (minors m)
            
 
 
 
 --basic operations
 --doprod vector vector mult add a
-dotProd : Vector a -> Vector a -> (a -> a -> a) -> (a -> a -> a) -> a -> a
-dotProd v1 v2 mult add zero = 
+dotProd : Space a -> Vector a -> Vector a -> a
+dotProd space v1 v2  = 
   let 
     vlength = Array.length v1 
+    mult = space.mult
+    add = space.add
+    zero = space.zero
+    one = space.one
   in
   if vlength == 0 then Debug.crash "Crash in Dotproduct" 
   else if vlength /= Array.length v2 then Debug.crash "Crash in Dotproduct"
@@ -550,11 +586,15 @@ dotProd v1 v2 mult add zero =
     
 
 
-matrixMult : Matrix a -> Matrix a -> (a -> a -> a) -> (a -> a -> a) -> a -> Matrix a
-matrixMult m1 m2 mult add zero = 
+matrixMult : Space a -> Matrix a -> Matrix a -> Matrix a
+matrixMult space m1 m2 = 
   let 
     m1d = dimM m1
     m2d = dimM m2
+    mult = space.mult
+    add = space.add
+    zero = space.zero
+    one = space.one
   in
     if (snd m1d) /= (fst m2d) then Debug.crash "matrix mult" 
     else
@@ -563,7 +603,7 @@ matrixMult m1 m2 mult add zero =
         rowsofm1 = Array.indexedMap unsafeGetRow (Array.repeat (fst m1d) m1)
         cols = snd m2d
         colsofm2 = Array.map (\f -> f m2) (Array.map unsafeGetCol (Array.fromList [0..(cols - 1)]))
-        localDotProd = \v1 v2 -> dotProd v1 v2 mult add zero
+        localDotProd = \v1 v2 -> dotProd space v1 v2 
       in
         Array.map (\x -> Array.map x colsofm2) (Array.map localDotProd rowsofm1 )
     
