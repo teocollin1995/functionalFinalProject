@@ -20,6 +20,8 @@ basicStyle =
       , ("border","3pt")
       , ("border-style","solid")
       , ("border-color","black")
+      , ("width", "300px")
+      , ("height","300px")
       ]
   
 compute : String -> String

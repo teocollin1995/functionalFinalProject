@@ -4,6 +4,7 @@ import Char
 import Maybe exposing (withDefault)
 import Result exposing (toMaybe)
 import String
+import Array as A
 
 import Expression exposing (..)
 import OurParser as P exposing (Parser, (*>))
@@ -104,6 +105,10 @@ parens : Parser a -> Parser a
 parens p =
   P.between (skipSpaces *> P.token "(") (skipSpaces *> P.token ")") p
 
+comma = P.satisfy ((==) ',')
+left_curly = P.satisfy ((==) '{')
+right_curly = P.satisfy ((==) '}')
+              
 maybeParens : Parser a -> Parser a
 maybeParens p =
   P.between (skipSpaces *> (P.optional1 <| P.token "(")) (skipSpaces *> (P.optional1 <| P.token ")")) p
@@ -129,6 +134,19 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp Im) "im")
   <++ (token1 (EUnaryOp Abs) "abs"))
 
+parseMatrix : Parser Exp
+parseMatrix =
+  P.recursively <| \_ ->
+    P.map EMatrix <|
+     P.between left_curly right_curly <|
+      P.map A.fromList <| P.separatedBy parseVector comma
+
+parseVector : Parser (Vector Exp)
+parseVector =
+  P.recursively <| \_ ->
+    P.between left_curly right_curly <|
+     P.map A.fromList <| P.separatedBy parseExp comma
+    
 allOps : List String
 allOps =
   ["pi","e"
@@ -195,7 +213,7 @@ parseExp = P.recursively <| \_ ->
                 (token1 (EBinaryOp Pow) "^")
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
-        prec4 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
+        prec4 = P.recursively <| \_ -> parseMatrix <++ parseNum <++ parseConst <++ parens prec0
    in prec0
 
 parse : String -> Result String Exp
