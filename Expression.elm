@@ -9,20 +9,21 @@ type Exp =
   | EUnaryOp Op Exp
   | EConst Op
   | Variable String
-  | EReal Float
+  | EReal Real
   | EComplex Complex 
   | EPoly Poly
   | EMatrix (Matrix Exp)
   | EVector (Vector Exp)
 
+                
 type Poly = List Mono
 type alias Mono = { coeff : Float, var: String, pow: Int}
+                
 type alias Complex = {re : Float, im: Float}
-type alias Vector a = Array a
---type alias RowVector a = Vector a
---type alias ColVector a = Vector a
-type alias Matrix a = Vector (Vector a)
+type alias Real = Float
 
+type alias Vector a = Array a
+type alias Matrix a = Vector (Vector a)
 
 -- Op refers to built in functions/constant
 type Op =
@@ -39,12 +40,3 @@ type Op =
    | Pow | Mod
    --| Derv --We may want people to be able to add these in with other expressions? - we will add this when we write the differentiator
    
-
-
-simplify : Exp -> Exp
-simplify exp = exp
-
-evaluate : List String -> List Float -> Exp -> Result String Exp -- gives us some freedom to deal with partial evaluations
-evaluate variables values exp = Ok exp
-    
-    
