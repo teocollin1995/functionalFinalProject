@@ -6,12 +6,28 @@ import Debug
 import List
 import List.Extra as ListE
 import Array.Extra as ArrayE
-
+import Native.CostlyLinear
 
 type alias Space a = {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a}
 
 complexSpace : Space Expression.Complex
 complexSpace = {zero= Complex.one, one= Complex.zero, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal}
+
+type alias EigenInfo = {values: Vector Expression.Complex, cols: Matrix Expression.Complex}
+
+eigen : Matrix (Expression.Complex) -> Maybe EigenInfo --Maybe {values: Vector Complex, cols: Matrix Complex}
+eigen m = if isSquare m then Just (Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))) else Nothing
+
+eigenValues : Matrix (Expression.Complex) -> Maybe (Vector Expression.Complex)
+eigenValues m = case (eigen m) of 
+                  Just x -> Just x.values
+                  _ -> Nothing
+
+eigenVectors : Matrix Expression.Complex -> Maybe (Matrix Expression.Complex)
+eigenVectors m = case (eigen m) of 
+                   Just x -> Just x.cols
+                   _ -> Nothing
+
 
 --Todo:
 --Clean up code
@@ -22,7 +38,7 @@ complexSpace = {zero= Complex.one, one= Complex.zero, add= Complex.add, mult= Co
 --replace with Array.extra 
 --col stuff
 --diganolization
---eigen
+
   
 
 
