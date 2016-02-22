@@ -9,7 +9,6 @@ type Exp =
   | EUnaryOp Op Exp
   | EConst Op
   | Variable String
-  --| EInt Int 
   | EReal Float
   | EComplex Complex 
   | EPoly Poly
@@ -28,7 +27,7 @@ type alias Matrix a = Vector (Vector a)
 -- Op refers to built in functions/constant
 type Op =
    -- constants
-   Pi | E | I
+   Pi | E
    -- unary ops
    | Sin | Cos | Tan | ArcSin | ArcCos | ArcTan
    | Floor | Ceiling | Round

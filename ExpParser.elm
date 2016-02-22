@@ -79,7 +79,7 @@ token1 : a -> String -> Parser a
 token1 val str = skipSpaces *> (always val <$> P.token str)
 
 parseReal : Parser Exp
-parseReal = skipSpaces *> (EReal <$> float)
+parseReal = skipSpaces *> (EReal <$> intOrFloat)
             
 parseComplex : Parser Exp
 parseComplex =
@@ -156,7 +156,33 @@ opStr s =
     "*" -> Mult
     "/" -> Frac
     _ -> Debug.crash <| "opStr: " ++ s
-        
+
+strOp : Op -> String
+strOp op =
+  case op of
+    Pi -> "pi"
+    E  -> "e"
+    Sin -> "sin"
+    Cos -> "cos"
+    Tan -> "tan"
+    ArcSin -> "arcsin"
+    ArcCos -> "arccos"
+    ArcTan -> "arctan"
+    Floor -> "floor"
+    Ceiling -> "ceiling"
+    Round -> "round"
+    Sqrt -> "sqrt"
+    Log  -> "log"
+    Plus -> "+"
+    Minus -> "-"
+    Mult -> "*"
+    Frac -> "/"
+    Pow  -> "^"
+    Mod  -> "mod"
+    _  -> Debug.crash <| "strOp: " ++ toString op
+
+--parse and unparse based on http://cmsc-16100.cs.uchicago.edu/2015/Lectures/23-propositional-logic-parsing.php
+
 parseExp : Parser Exp
 parseExp = P.recursively <| \_ ->
    let  prec0 = P.recursively <| \_ -> P.chainl1 prec1 <|
@@ -171,5 +197,32 @@ parseExp = P.recursively <| \_ ->
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ -> parseNum <++ parseConst <++ parens prec0
    in prec0
-      
+
+parse : String -> Result String Exp
+parse s = P.parse parseExp s
+
+unparse : Exp -> String
+unparse = prec 0
+
+prec i e =
+  case e of
+    EReal x -> toString x
+    EComplex x -> toString x.re ++ "+" ++ toString x.im ++ "i"
+    EUnaryOp op e1 -> strOp op ++ prec 4 e1
+    EBinaryOp op e1 e2 ->
+      let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
+      case op of
+        Plus -> toPrec 1
+        Minus -> toPrec 1
+        Mult -> toPrec 2
+        Frac -> toPrec 2
+        Pow -> toPrec 3
+        Mod -> toPrec 3
+        _   -> Debug.crash "prec: not a binary op"
+    _ -> Debug.crash <| toString e
+         
+paren cutoff prec str =
+  if prec > cutoff then "(" ++ str ++ ")"
+  else str
+  
 test = P.parse parseExp "sin(2+3i)"
