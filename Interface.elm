@@ -70,6 +70,7 @@ view model =
             [ Attr.contenteditable False
             , Events.onMouseDown btnMailbox.address "clear"
             , Events.onClick btnMailbox.address "update"
+            , Events.onMouseUp btnMailbox.address "tex"
             ]
             [ Html.text "See Result" ]
   in
@@ -90,9 +91,7 @@ eventsFromJS =
 port signalFromJS : Signal String
                     
 port signalToJS : Signal String
-port signalToJS =
-  Signal.merge btnMailbox.signal
-    <| Signal.map (always "tex") <| Time.every (5*Time.second)
+port signalToJS = btnMailbox.signal
                   
 main : Signal Html
 main = Signal.map view (Signal.foldp upstate initModel events)
