@@ -222,10 +222,15 @@ parse s = P.parse parseExp s
 unparse : Exp -> String
 unparse = prec 0
 
+unparseVec : Vector Exp -> String
+unparseVec v = "{" ++ List.foldr (++) "" (List.intersperse "," <| A.toList <| A.map unparse v) ++ "}"
+
 prec i e =
   case e of
     EReal x -> toString x
     EComplex x -> toString x.re ++ "+" ++ toString x.im ++ "i"
+    EVector v -> unparseVec v
+    EMatrix m -> "{" ++ List.foldr (++) "" (List.intersperse "," <| A.toList <| A.map unparseVec m) ++ "}"
     EUnaryOp op e1 -> strOp op ++ prec 4 e1
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in

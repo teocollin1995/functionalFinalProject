@@ -1,12 +1,17 @@
 window.initialPortValues["signalFromJS"] = "DUMMY";
 
 window.initializers.push(function (elmRuntime) {
-    elmRuntime.ports.signalToJS.subscribe(function () {
-        clear();
-        console.log(document.getElementById("output"));
-        var s = window.document.getElementById("input").textContent;
-        elmRuntime.ports.signalFromJS.send(s);
-        tex();
+    elmRuntime.ports.signalToJS.subscribe(function (info) {
+        if (info == "clear") {
+            clear();
+        }
+        else if (info == "tex") {
+            tex();
+        }
+        else {
+            var s = window.document.getElementById("input").textContent;
+            elmRuntime.ports.signalFromJS.send(s);
+        }
     });
 });
                                          
@@ -34,14 +39,11 @@ function clear() {
     var len = nodes.length;
     console.log(len);
     var i;
-    var temp;
-    while (nodes) {
-        temp = nodes[0];
-        if (temp.nodetype) {
-            node.removeChild(temp);
-        }
-        else {
-            break;
-        }
+    var temp = nodes[0];
+    while (node.firstChild) {
+        node.removeChild(node.firstChild);
+    }
+    if (!temp.nodetype) {
+        node.appendChild(temp);
     }
 }

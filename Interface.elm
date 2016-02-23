@@ -4,6 +4,7 @@ import Html exposing (Html, Attribute)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Signal exposing (Mailbox, mailbox)
+import Time
 
 import Expression exposing (..)
 import ExpParser as Parser
@@ -30,8 +31,8 @@ compute input =
     Ok exp -> Parser.unparse <| E.eval exp
     Err s -> Debug.crash s
              
-btnMailbox : Mailbox ()
-btnMailbox = mailbox ()
+btnMailbox : Mailbox String
+btnMailbox = mailbox ""
 
 evtMailbox : Mailbox Event
 evtMailbox = mailbox (UpModel identity)
@@ -67,7 +68,8 @@ view model =
   let btn =
         Html.button
             [ Attr.contenteditable False
-            , Events.onClick btnMailbox.address ()
+            , Events.onMouseDown btnMailbox.address "clear"
+            , Events.onClick btnMailbox.address "update"
             ]
             [ Html.text "See Result" ]
   in
@@ -87,8 +89,10 @@ eventsFromJS =
 
 port signalFromJS : Signal String
                     
-port signalToJS : Signal ()
-port signalToJS = btnMailbox.signal
+port signalToJS : Signal String
+port signalToJS =
+  Signal.merge btnMailbox.signal
+    <| Signal.map (always "tex") <| Time.every (5*Time.second)
                   
 main : Signal Html
 main = Signal.map view (Signal.foldp upstate initModel events)
