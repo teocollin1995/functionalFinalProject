@@ -61,7 +61,7 @@ view model =
   in
   let output =
         Html.div
-            [ basicStyle, Attr.contenteditable False]
+            [ basicStyle, Attr.contenteditable False, Attr.id "output" ]
             [ Html.text model.output ]
   in
   let btn =
@@ -80,9 +80,9 @@ initModel = { input = "", output = ""}
 
 --- interaction with javascript ---
 
-eventsFromJS : Signal Event
+eventsFromJS : Signal Event 
 eventsFromJS =
-  let foo s = UpModel <| \model -> { input = s, output = compute s } in
+  let foo s = UpModel <| \model -> { input = s, output = "$$" ++ compute s ++ "$$" } in
   Signal.map foo signalFromJS
 
 port signalFromJS : Signal String
