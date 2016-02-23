@@ -6,13 +6,12 @@ i = {re = 0, im = 1}
 
 one : Complex
 one = {re = 1, im = 0}
-<<<<<<< HEAD
-zero = {re= 0, im = 0}
-=======
+
+
 
 zero : Complex
 zero = {re = 0, im = 0}
->>>>>>> 5987edf2d3c2ea289aa9394ead7b0b058e1c33c0
+
 
 real : Complex -> Float
 real c = c.re
