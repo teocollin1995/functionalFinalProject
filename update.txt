@@ -1,10 +1,12 @@
-Overall update:
+Overall update: There is a short summary here and we elaborate individually below. Compile instructions are seperate for each part.
 
-compile: run make in the directory. Then view the interface by opening index.html. In the interface (which is terribly ugly), there are two boxes. The upper one is the one for input and you can type in some simple expressions like 2+3*4, and after clicking on the "see Result" button, the result of the evaluation will be shown in the lower box. Notice that we are trying (unsuccessfully) to render the output in LaTex. Therefore the result shown now is surrounded by "$$".
+the gist: We have most of the basic functionality up except for calculus and plotting. The interface and the calculus part need the most development. The linear algebra part ahd parsing part are pretty okay (even though we had to pretty much write libraries in the process). We think that we should be able to accomplish most of what we set out to do although as detailed below we may scale back some of the calculus parts or some graphics stuff (plotting). We hope to avoid this. Otherwise, we have decided to add Tex expression rendering (because who wants to render a matrix with elm as opposed to bmatrix?) if we can and possibly some minor number information thing. We elaborate on everything below
 
 Separate Updates:
 
 Bowen's part: Expression.elm OurParser.elm ExpParser.elm Eval.elm Interface.elm port.js index.html
+
+compile: run make in the directory. Then view the interface by opening index.html. In the interface (which is terribly ugly), there are two boxes. The upper one is the one for input and you can type in some simple expressions like 2+3*4, and after clicking on the "see Result" button, the result of the evaluation will be shown in the lower box. Notice that we are trying (unsuccessfully) to render the output in LaTex. Therefore the result shown now is surrounded by "$$".
 
 We currently have all the simple expressions working (including matrix). The Expression module exposes all the types we use for the project including the main Exp type that is used as the internal representation of the input expression from the user.
 
@@ -15,9 +17,9 @@ Then the Eval module is a evaluator of that simplifies the Exp type as much as p
 The Interface is supposed to be a wolframalpha like interface where the user can type in expressions and see the results of the evaluation. The way we achieve this is that when the user click on the "see Result" button, we send a signal to the javascript port to retrieve the text from the input div and then parse and evaluate the input to generate the output. Currently the interface is very ugly and unfriendly, but I hope to make it better as we progress. Also, we are trying to embed latex into html so that the output is rendered in latex output (which is nice). However, there are some problems with dynamically generating tex code so that currently we don't quite have that working. Hopefully that will be solved soon...
 
 
-Teo's part: Linear.elm/Native/Complex.elm/Expresion.elm (part of it)
+Teo's part: Linear.elm/Native(CostlyLinear)/Complex.elm/Expresion.elm (part of it)
 
-Compiling my part: Install all the packages in elm-packages.json. Load in the file you want to try in the repl to play around with it. 
+Compile: Install all the packages in elm-packages.json. Load in the file you want to try in the repl to play around with it. 
 
 What I will address: Progress on Linear Algebra, thoughts on the calculus library.
 
@@ -26,6 +28,8 @@ So, on the face of everything, we have most of the linear algebra functionality 
 http://www.wolframalpha.com/input/?i=%7B%7B1,2,5%7D,%7B3,5,-1%7D,%7B7,-3,5%7D%7D
 
 you will find that we have the capability of generating almost everything so I think we have sort of delivered on this.
+
+I will also note that to do eigen values we used native code. During this, I ended up simply useful code from JMmath (a javascript lib)  and putting it in since import does not work. Since the FFI doesn't automatically convert elm types, I went into the native elm core and grab the relevant functions. 
 
 Now, there are a number of problems with the library that I need to fix. First, the docs should be better (e.g. spell matrix correctly...). Second, there are a lot of small/easy to implement functions that don't make this incomplete, but would be nice. Third, literally everything is unsafe/doesn't check invariants; we need to fix this (not to say that it doesn't work, but doing anything out of bounds will lead to a crash...). On a similar note, we need to consider another wrapper so that the vector/matrix type actually hide their array heritage. Fourth, there are also a few functions that could be improved (e.g. the determiant is horribly inefficiently). Lastly, we need to find a testing suite and make sure that everything works (there are probably a few bugs.). All of this withstanding, I still think we have something approaching a linear algebra library that can do almost our wolframalpha would need it to do.
 
