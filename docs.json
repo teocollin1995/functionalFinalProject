@@ -1,0 +1,320 @@
+[
+  {
+    "name": "Linear",
+    "comment": " The Linear module provides a variety of tools from Linear Algebra. Matrix and Vector are defined in expression, but tools for manipulating them (e.g. though maps, dot products, norms, row operations, determiants, eigen values, and what not) are stored here. \n\nIn order to allow you to accomplish these operations in full generality, we have created a Space type where you define zero, one, addition, multiplication, subtraction, division, and from real. Once you supply this for a particular type, you can specalize all the functions that require any of these operations. Any function that did not require these operations can be used for any Matrix a or Vector a.\n\nNote that for all functions take rows and cols, the rows are alwalys given first and then the cols. So for unsafeGetM : Int -> Int -> Matrix a -> a , the first argument is a row, the second is the column. \n\nTODO:\n\n# Space \n@docs Space, complexSpace\n\n# Builders\n@docs vector, matrix, rowVector, colVector\n\n# Dimensions \n@docs dimV, nrows, ncols\n\n# Special Matrices\n@docs same, identity, isIdentity, permMatrix, allPermutationMatricies, isTriangular, isSquare\n\n# List Conversions\n@docs vectorFromList, fromList, fromLists, toList, toLists, toVector\n\n# Accessing \n@docs unsafeGetM, unsafeGetRow, unsafeGetCol, unsafeGetDiag\n\n# Setting\n@docs set, setRow, setCol\n\n# Mapping\n@docs map, indexedMap, mapVector, indexedMapVector\n\n# Extensions\n@docs extendMatrix, extendMatrixTo\n\n# Submatricies and Blocks\n@docs submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors\n\n# Single Matrix, Row Operations, and Single Vector Operations \n@docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards\n\n# Operations on Two Matricies or Two Vectors\n@docs elementWise, vectorMap2, dotProd, matrixMult\n\n# Matrix properties\n@docs  invert, invertable, trace, diagProd, simpleDet\n\n# Numerical Linear Algebra \n@docs eigenValues, eigenVectors\n",
+    "aliases": [
+      {
+        "name": "Space",
+        "comment": " A mechanism for specificying the context of various operations. Basically, I want to be able to use my rowReduce function for real and complex numbers. So, I write a real and complex space and supply the real one to rowReduce when I'm using real numbers and the complex one to rowReduce when using complex numbers. The specalize function (TBW) gives a record containing all functions like rowReduce for a given space.\n\n",
+        "args": [
+          "a"
+        ],
+        "type": "{ zero : a , one : a , add : a -> a -> a , mult : a -> a -> a , sub : a -> a -> a , div : a -> a -> a , fromReal : Float -> a }"
+      }
+    ],
+    "types": [],
+    "values": [
+      {
+        "name": "allPermutationMatricies",
+        "comment": " Generates all possible permutation matrices of a size nfor a Space a.\n\n",
+        "type": "Linear.Space a -> Int -> List (Expression.Matrix a)"
+      },
+      {
+        "name": "colVector",
+        "comment": " Generates a matrix that is just a column vector.\n\n",
+        "type": "Expression.Vector a -> Expression.Matrix a"
+      },
+      {
+        "name": "combineRow",
+        "comment": " Adds one row times a scalar to another. To add the 3rd row times 4 to the 2nd row:\n\n    combineRow realSpace 4 2 3 matrix\n\n\n",
+        "type": "Linear.Space a -> a -> Int -> Int -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "complexSpace",
+        "comment": " An example of a space\n",
+        "type": "Linear.Space Expression.Complex"
+      },
+      {
+        "name": "diagProd",
+        "comment": " Calculates the products of the numbers in the diagnoal of a matrix.\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> a"
+      },
+      {
+        "name": "dimV",
+        "comment": " Length of a vector\n\n",
+        "type": "Expression.Vector a -> Int"
+      },
+      {
+        "name": "dotProd",
+        "comment": " Computes the dot product of two vectors in a space.\n\n",
+        "type": "Linear.Space a -> Expression.Vector a -> Expression.Vector a -> a"
+      },
+      {
+        "name": "eigenValues",
+        "comment": " Retuns Just a vector of eigen values or nothing if the matrix is not square or something horrible happens. Uses native code.\n\n\n",
+        "type": "Expression.Matrix Expression.Complex -> Maybe.Maybe (Expression.Vector Expression.Complex)"
+      },
+      {
+        "name": "eigenVectors",
+        "comment": " Retuns Just a matrix of eigenvectors where each eigenvector is a column. Returns Nothing is the matrix is not square or something horrible happens. Uses native code.\n\n\n",
+        "type": "Expression.Matrix Expression.Complex -> Maybe.Maybe (Expression.Matrix Expression.Complex)"
+      },
+      {
+        "name": "elementWise",
+        "comment": " Basically List.map2 but for matricies.\n\n",
+        "type": "(a -> b -> c) -> Expression.Matrix a -> Expression.Matrix b -> Expression.Matrix c"
+      },
+      {
+        "name": "extendMatrix",
+        "comment": " Extends a matrix to new rows + old rows by new cols + old cols and fills the new elements with some member of the type a. To extend a matrix of 2 by 2 integers to 3 by 3 integers with 0s:\n\n                                 (1 1 0)\n                       (1 1)     (1 1 0)\n    extendMatrix 1 1 0 (1 1) =   (0 0 0)\n\n\n\n",
+        "type": "Int -> Int -> a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "extendMatrixTo",
+        "comment": " Like extendMatrix but the rows and columns specified are the new dimensions of the matrix (as opposed to adding row many rows and col many columns). The same example: \n\n                                   (1 1 0)\n                         (1 1)     (1 1 0)\n    extendMatrixTo 3 3 0 (1 1) =   (0 0 0)\n\n",
+        "type": "Int -> Int -> a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "fromList",
+        "comment": " Generates a matrix of size rows*cols from a list. If rows*cols \\= List.length xs then it crashes. \n\n                          (0 1 2)\n                          (3 4 5)\n    fromList [0..8] 3 3 = (6 7 8)\n\n\n",
+        "type": "List a -> Int -> Int -> Expression.Matrix a"
+      },
+      {
+        "name": "fromLists",
+        "comment": " Generats a matrix from a list of lists where each list is a row.\n\n",
+        "type": "List (List a) -> Expression.Matrix a"
+      },
+      {
+        "name": "gaussianEliminationBackwards",
+        "comment": " Reduces a matrix to a lower triangular matrix if possible. Does not signal if this is impossible (yet)...\n\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "gaussianEliminationForward",
+        "comment": " Reduces a matrix to a upper triangular matrix if possible. Does not signal if this is impossible (yet)...\n\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "horizontalJoin",
+        "comment": " Horizontally joins togeather one matrix with another.\n\n",
+        "type": "Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "identity",
+        "comment": " Generates an n by n matrix that is the identity matrix for the Space a.\n\n",
+        "type": "Linear.Space a -> Int -> Expression.Matrix a"
+      },
+      {
+        "name": "indexedMap",
+        "comment": " An indexed map function for a matrix. The mapping function take the current row and then the current column.\n\n",
+        "type": "(Int -> Int -> a -> b) -> Expression.Matrix a -> Expression.Matrix b"
+      },
+      {
+        "name": "indexedMapVector",
+        "comment": " What it says on the tin\n\n",
+        "type": "(Int -> a -> b) -> Expression.Vector a -> Expression.Vector b"
+      },
+      {
+        "name": "invert",
+        "comment": " Attemps to invert a matrix. Returns Just (the inverse) if it can and returns Nothing if there is no inverse.\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Maybe.Maybe (Expression.Matrix a)"
+      },
+      {
+        "name": "invertable",
+        "comment": " Checks if a matrix is invertable.\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Bool"
+      },
+      {
+        "name": "isIdentity",
+        "comment": " Tests if a matrix is an identity matrix for a particular space.\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Bool"
+      },
+      {
+        "name": "isSquare",
+        "comment": " Tests if any matrix is square.\n\n",
+        "type": "Expression.Matrix a -> Bool"
+      },
+      {
+        "name": "isTriangular",
+        "comment": " Tests if a matrix is triangular in a space a\n\n",
+        "type": "Linear.Space b -> Expression.Matrix b -> Bool"
+      },
+      {
+        "name": "map",
+        "comment": " A map function for a matrix\n\n",
+        "type": "(a -> b) -> Expression.Matrix a -> Expression.Matrix b"
+      },
+      {
+        "name": "mapVector",
+        "comment": " What it says on the tin\n\n",
+        "type": "(a -> b) -> Expression.Vector a -> Expression.Vector b"
+      },
+      {
+        "name": "matrix",
+        "comment": " Generates a matrix. For example, if you wanted to generate a 2 by 3 matrix where each member was the sum of the indicies:\n                                 (0 1 2)\n    matrix 2 3 (\\x y -> x + y) = (1 2 3)\n\n",
+        "type": "Int -> Int -> (Int -> Int -> a) -> Expression.Matrix a"
+      },
+      {
+        "name": "matrixMult",
+        "comment": " Matrix multiplication.\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "minor",
+        "comment": " Creates the minor matrix of from the ith element of the 1st row. It returns the ith element of the 1st row, the sign (-1.0 or 1.0), and the minor matrix.\n\n",
+        "type": "Int -> Expression.Matrix a -> ( a, Float, Expression.Matrix a )"
+      },
+      {
+        "name": "minors",
+        "comment": " Returns all possible minors with their signs and corresponding elements.\n\n",
+        "type": "Expression.Matrix a -> Array.Array ( a, Float, Expression.Matrix a )"
+      },
+      {
+        "name": "ncols",
+        "comment": " What it says on the tin\n\n",
+        "type": "Expression.Matrix a -> Int"
+      },
+      {
+        "name": "nrows",
+        "comment": " What it says on the tin\n\n",
+        "type": "Expression.Matrix a -> Int"
+      },
+      {
+        "name": "permMatrix",
+        "comment": " Generates a permutation matrix for Space a by switching two columns of the identity matrix of a size. Takes the size then ith and jth columns.\n\n",
+        "type": "Linear.Space a -> Int -> Int -> Int -> Expression.Matrix a"
+      },
+      {
+        "name": "rowReduce",
+        "comment": " Row reduces a matrix in a space a\n\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "rowVector",
+        "comment": " Generates a matrix that is just a row vector.\n\n",
+        "type": "Expression.Vector a -> Expression.Matrix a"
+      },
+      {
+        "name": "same",
+        "comment": " Generates a row by col matrix of one member of type a.\n\n\n",
+        "type": "Int -> Int -> a -> Expression.Matrix a"
+      },
+      {
+        "name": "scaleMatrix",
+        "comment": " Scales a matrix in some space by some scalar in that space. \n\n\n",
+        "type": "Linear.Space a -> a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "scaleRow",
+        "comment": " Scales just one row by some scalar.\n\n",
+        "type": "Linear.Space a -> Int -> a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "scaleVector",
+        "comment": " Scales a vector in some space by some scalar in that space. \n\n\n",
+        "type": "Linear.Space a -> a -> Expression.Vector a -> Expression.Vector a"
+      },
+      {
+        "name": "set",
+        "comment": " Sets a value of one matrix cell. To set the 3rd value of the 2nd row:\n    set 2 3 replacement matrix\n\n",
+        "type": "Int -> Int -> a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "setCol",
+        "comment": " Sets a column to the value of another vector\n\n\n",
+        "type": "Int -> Expression.Vector a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "setRow",
+        "comment": " Sets a row to the value of another vector\n\n\n",
+        "type": "Int -> Expression.Vector a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "simpleDet",
+        "comment": " Calculates the determiant of a matrix with the cofactor expansion. This is O((n-1)!). I will probably add other versions of it to use rowReduction, but this can be done later.\n\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> a"
+      },
+      {
+        "name": "splitBlocks",
+        "comment": " I'm getting lazy about this. Just see https://hackage.haskell.org/package/matrix-0.3.4.4/docs/Data-Matrix.html#g:8\n\n\n",
+        "type": "Int -> Int -> Expression.Matrix a -> ( Expression.Matrix a , Expression.Matrix a , Expression.Matrix a , Expression.Matrix a )"
+      },
+      {
+        "name": "submatrix",
+        "comment": " Selects a subMatrix. The integer arguments are start row, end row, start column, and end column.\n\n",
+        "type": "Int -> Int -> Int -> Int -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "switchRow",
+        "comment": " Switches two rows of a matrix.\n\n\n",
+        "type": "Int -> Int -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "toList",
+        "comment": " Converts a matrix to a list\n\n\n",
+        "type": "Expression.Matrix a -> List a"
+      },
+      {
+        "name": "toLists",
+        "comment": " Converts a matrix to a list of lists where each list is a row.\n\n",
+        "type": "Expression.Matrix a -> List (List a)"
+      },
+      {
+        "name": "toVector",
+        "comment": " Converts a matrix to a single vector containing all elements\n\n\n",
+        "type": "Expression.Matrix a -> Expression.Vector a"
+      },
+      {
+        "name": "trace",
+        "comment": " Calculates the trace of a matrix.\n\n",
+        "type": "Linear.Space a -> Expression.Matrix a -> a"
+      },
+      {
+        "name": "transpose",
+        "comment": " Transposes a matrix. \n\n",
+        "type": "Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
+        "name": "unsafeGetCol",
+        "comment": " Gets a column \n\n",
+        "type": "Int -> Expression.Matrix a -> Expression.Vector a"
+      },
+      {
+        "name": "unsafeGetDiag",
+        "comment": " Gets the diagonal of a matrix.\n\n",
+        "type": "Expression.Matrix a -> Expression.Vector a"
+      },
+      {
+        "name": "unsafeGetM",
+        "comment": " Gets an element from a matrix and crashes if it is out of bounds. To get the 2nd element of the 1st row:\n    \n    unsafeGetM 1 2 m\n\n\n",
+        "type": "Int -> Int -> Expression.Matrix a -> a"
+      },
+      {
+        "name": "unsafeGetRow",
+        "comment": " Gets a row.\n\n",
+        "type": "Int -> Expression.Matrix a -> Expression.Vector a"
+      },
+      {
+        "name": "vector",
+        "comment": " Generates a vector of length n from a function that takes an index and generates a member of the vector:\n\n    vector 2 (\\x -> x) = Vector (0 1 2)\n\n",
+        "type": "Int -> (Int -> a) -> Expression.Vector a"
+      },
+      {
+        "name": "vectorFromList",
+        "comment": " Generates a vector from a list.\n\n",
+        "type": "List a -> Expression.Vector a"
+      },
+      {
+        "name": "vectorMap2",
+        "comment": " Basically List.map2 but for vectors.\n\n",
+        "type": "(a -> b -> c) -> Expression.Vector a -> Expression.Vector b -> Expression.Vector c"
+      },
+      {
+        "name": "verticalJoin",
+        "comment": " Vertically joins togeather one matrix with another.\n\n",
+        "type": "Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a"
+      }
+    ],
+    "generated-with-elm-version": "0.16.0"
+  }
+]

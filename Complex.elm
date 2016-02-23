@@ -7,8 +7,11 @@ i = {re = 0, im = 1}
 one : Complex
 one = {re = 1, im = 0}
 
+
+
 zero : Complex
 zero = {re = 0, im = 0}
+
 
 real : Complex -> Float
 real c = c.re

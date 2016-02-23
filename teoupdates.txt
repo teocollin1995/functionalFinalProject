@@ -1,0 +1,23 @@
+Teo's part: Linear.elm/Native/Complex.elm/Expresion.elm (part of it)
+
+Compiling my part: Install all the packages in elm-packages.json. Load in the file you want to try in the repl to play around with it. 
+
+What I will address: Progress on Linear Algebra, thoughts on the calculus library.
+
+What Bowen will address in his update: Interface/Graphics and expression manipulation (i.e the algerbaic system). 
+
+So, on the face of everything, we have most of the linear algebra functionality that we promised. If you look at the HASTILY WRITTEN DOCUMENTATION for linear.elm, you will find that we have (in almost full generality) functions for just about everything that we specifically mentioned. The only thing that is obviously missing is diagnolization and conditional number, but now that I have eigenvalues working, neither of these will be hard. If you look at a sample matrix put through wolframalpha:
+
+http://www.wolframalpha.com/input/?i=%7B%7B1,2,5%7D,%7B3,5,-1%7D,%7B7,-3,5%7D%7D
+
+you will find that we have the capability of generating almost everything so I think we have sort of delivered on this.
+
+Now, there are a number of problems with the library that I need to fix. First, the docs should be better (e.g. spell matrix correctly...). Second, there are a lot of small/easy to implement functions that don't make this incomplete, but would be nice. Third, literally everything is unsafe/doesn't check invariants; we need to fix this (not to say that it doesn't work, but doing anything out of bounds will lead to a crash...). On a similar note, we need to consider another wrapper so that the vector/matrix type actually hide their array heritage. Fourth, there are also a few functions that could be improved (e.g. the determiant is horribly inefficiently). Lastly, we need to find a testing suite and make sure that everything works (there are probably a few bugs.). All of this withstanding, I still think we have something approaching a linear algebra library that can do almost our wolframalpha would need it to do.
+
+
+With regard to the current standing of the project, I think we will deliver on the Linear Algebra part as stated. We have not started on the calculus part, but I think we will be able to deliver on symbolic diffrentation at a min and probably also on numeric integration and easy plottings. The graphics situation for the plotting might be more complicated than we thought, but besides that I don't have many concerns. Bowen will discuss the interface/graphics in greater detail. The expression/manipulations are done in terms of some basic things and we have a basic interface (Again, see Bowen's part).
+
+With regard to any expansions, I might take the time to write something that looks up information about numbers in some online data base and see if I can do anything with it. (E.g. see what happens when you enter '3' in wolframalpha). This is more on a desire to understand related features and I've not talked to Bowen about this yet and I'm not sure it would integrate well with the graphics part. We will see... (I will probably not do it...)
+
+
+

@@ -8,7 +8,7 @@
         "src/"
     ],
     "native-modules": true,
-    "exposed-modules": [],
+    "exposed-modules": ["Linear"],
     "dependencies": {
         "Dandandan/parser": "6.2.3 <= v < 7.0.0",
         "circuithub/elm-array-extra": "1.1.2 <= v < 2.0.0",
