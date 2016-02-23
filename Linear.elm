@@ -88,7 +88,7 @@ type alias Space a =
 {-| An example of a space
 -}
 complexSpace : Space Expression.Complex
-complexSpace = {zero= Complex.one, one= Complex.zero, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal}
+complexSpace = {zero= Complex.zero, one= Complex.one, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal}
 
 
 {-| Generates a vector of length n from a function that takes an index and generates a member of the vector:
