@@ -5,4 +5,4 @@ before_script:
   - cd tests
   - npm install -g elm elm-test
   - elm-package install -y
-script: elm-test TestRunner.elm
+script: time elm-test TestRunner.elm
