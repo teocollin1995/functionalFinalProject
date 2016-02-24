@@ -5,16 +5,21 @@
     "license": "BSD3",
     "source-directories": [
         ".",
-        "src/"
+        "src/",
+        "tests/"
+    ],
+    "exposed-modules": [
+        "Linear"
     ],
     "native-modules": true,
-    "exposed-modules": ["Linear"],
     "dependencies": {
         "Dandandan/parser": "6.2.3 <= v < 7.0.0",
         "circuithub/elm-array-extra": "1.1.2 <= v < 2.0.0",
         "circuithub/elm-list-extra": "3.9.0 <= v < 4.0.0",
+        "deadfoxygrandpa/elm-test": "3.1.0 <= v < 4.0.0",
         "elm-lang/core": "3.0.0 <= v < 4.0.0",
         "evancz/elm-html": "4.0.2 <= v < 5.0.0",
+        "laszlopandy/elm-console": "1.1.0 <= v < 2.0.0",
         "maxsnew/lazy": "1.1.0 <= v < 2.0.0"
     },
     "elm-version": "0.16.0 <= v < 0.17.0"
