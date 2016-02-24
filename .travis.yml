@@ -6,4 +6,4 @@ before_script:
   - npm install -g elm elm-test
   - elm-package install -y
   - elm make TestRunner.elm
-script: time elm-test TestRunner.elm
+script: elm-test TestRunner.elm
