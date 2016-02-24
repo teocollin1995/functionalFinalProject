@@ -4,4 +4,5 @@ node_js:
 before_script:
   - npm install -g elm elm-test
   - elm-package install -y
-script: elm-test tests/TestRunner.elm
+  - cd tests
+script: elm-test TestRunner.elm
