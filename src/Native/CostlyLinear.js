@@ -6392,6 +6392,12 @@ var eigens = function(cmatrix){
 };
 
 
+var random_complex = function( z){
+    x = Jmat.Complex.random(0,1000);
+    return({re:x.re,im:x.im});
+};
+
+
 
 // make is a function that takes an instance of the 
 // elm runtime 
@@ -6411,7 +6417,7 @@ var make = function make(elm) {
     if (elm.Native.CostlyLinear.values) return elm.Native.CostlyLinear.values;
 
     // return the object of your module's stuff!
-    return elm.Native.CostlyLinear.values = {'eigens' : eigens};
+    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex};
 };
 
 // setup code for MyModule
