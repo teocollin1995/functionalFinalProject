@@ -6373,6 +6373,19 @@ function list(arr)
     return out;
 }
 //my stuff:
+ourMatrixToThereMatrix = function(cmatrix){
+    var acc = []
+    var jsarray = toArray(cmatrix);
+    var n = jsarray.length;
+    for(var i = 0; i < n; i++){
+        acc.push(toArray(jsarray[i]))
+    }
+    var crap = cMatrix(acc)    //converts our complex numbers to the Jmat complex type
+    var matrix = Jmat.Matrix(crap) //creates the matrix
+    return(matrix);
+
+};
+
 var eigens = function(cmatrix){
     //converts from a elm list to a js array:
     var acc = []
@@ -6391,10 +6404,19 @@ var eigens = function(cmatrix){
     //return list((cMatrix(acc)).map(list))
 };
 
-
+//evil but for testing
 var random_complex = function( z){
     x = Jmat.Complex.random(0,1000);
     return({re:x.re,im:x.im});
+};
+
+//test det
+var test_det = function(matrix){
+    newmatrix = ourMatrixToThereMatrix(matrix);
+    det = Jmat.Matrix.determinant(newmatrix);
+    return({re:det.re,im:det.im});
+
+
 };
 
 
@@ -6417,7 +6439,7 @@ var make = function make(elm) {
     if (elm.Native.CostlyLinear.values) return elm.Native.CostlyLinear.values;
 
     // return the object of your module's stuff!
-    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex};
+    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det};
 };
 
 // setup code for MyModule

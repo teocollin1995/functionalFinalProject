@@ -16,3 +16,6 @@ eigen m = Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))
 --randomness in a horrible horrible way... for testing purpose
 randomComplex : a -> Complex
 randomComplex = Native.CostlyLinear.random_complex
+
+testDet : Matrix (Complex) -> Complex
+testDet m = Native.CostlyLinear.test_det  (Array.toList (Array.map (Array.toList) m))
