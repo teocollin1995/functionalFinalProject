@@ -43,12 +43,18 @@ toRealfunc op f e =
   case e of
     EComplex x -> EReal <| f x
     _          -> Debug.crash <| toString op
-                  
+
+realfunc : Op -> (Real -> Real) -> Exp -> Exp
+realfunc op f e =
+  case e of
+    EReal x -> EReal <| f x
+    _       -> Debug.crash <| toString op
+               
 unparseUOp : Op -> Exp -> Exp
 unparseUOp op =
   let foo = genUnaryFunc op in
-  let undefined = Debug.crash <| toString op ++ " :undefined for complex" in
   let bar = toRealfunc op in
+  let baz = realfunc op in
   case op of
     Sin -> foo { realFun = sin, complexFun = C.csin }
     Cos -> foo { realFun = cos, complexFun = C.ccos }
@@ -56,9 +62,9 @@ unparseUOp op =
     ArcSin -> foo { realFun = asin, complexFun = flip C.casin 0 } --this needs to be fixed
     ArcCos -> foo { realFun = acos, complexFun = flip C.casin 0 }
     ArcTan -> foo { realFun = atan, complexFun = flip C.catan 0 }
-    Floor -> foo { realFun = toFloat << floor, complexFun = undefined }
-    Ceiling -> foo { realFun = (toFloat << ceiling), complexFun = undefined }
-    Round -> foo { realFun = (toFloat << round), complexFun = undefined }
+    Floor ->  baz <| toFloat << floor
+    Ceiling -> baz <| toFloat << ceiling
+    Round -> baz <| toFloat << round
     Sqrt -> foo { realFun = sqrt, complexFun = fst << C.sqrt } -- this needs to be fixed
     Log -> foo { realFun = logBase 10, complexFun = flip C.ln 0 } -- also this
     Abs -> \e ->

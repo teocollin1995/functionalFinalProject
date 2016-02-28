@@ -12,17 +12,60 @@ import Eval as E
 
 -- CSS classes here ---
 
-basicStyle : Attribute
 basicStyle =
-  Attr.style
       [ ("font-size","12pt")
       , ("font-family", "monospace")
       , ("white-space","pre")
-      , ("border","3pt")
-      , ("border-style","solid")
-      , ("border-color","black")
-      , ("width", "300px")
-      , ("height","300px")
+      ]
+
+containerStyle : Attribute
+containerStyle =
+  Attr.style <|
+      basicStyle ++
+           [ ("position","relative")
+           , ("width","800pt")
+           ]
+      
+inputStyle : Attribute
+inputStyle =
+  Attr.style <|
+      basicStyle ++
+             [ ("position","absolute")
+             , ("height","100pt")
+             , ("width", "300pt")
+             , ("left", "0pt")
+             , ("border", "3pt")
+             , ("border-style", "solid")
+             , ("border-color","blue")
+             ]
+
+outputStyle : Attribute
+outputStyle =
+  Attr.style <|
+      basicStyle ++
+             [ ("position","absolute")
+             , ("height", "100pt")
+             , ("width","300pt")
+             , ("left", "400pt")
+             , ("border", "3pt")
+             , ("border-style", "solid")
+             , ("border-color", "green")
+             ]
+
+buttonStyle : Attribute
+buttonStyle =
+  Attr.style
+      [ ("position","absolute")
+      , ("left", "305pt")
+      , ("background-color", "green")
+      , ("border","none")
+      , ("color", "white")
+      , ("padding", "10pt")
+      , ("text-align","center")
+      , ("text-decoration", "none")
+      , ("display", "inline-block")
+      , ("font-size","16pt")
+      , ("cursor", "pointer")
       ]
   
 compute : String -> String
@@ -56,26 +99,27 @@ events = Signal.merge evtMailbox.signal eventsFromJS
 view : Model -> Html
 view model =
   let input =
-        Html.div
-         [ basicStyle, Attr.contenteditable True, Attr.id "input" ]
+        Html.textarea
+         [ inputStyle, Attr.contenteditable True, Attr.id "input" ]
          [ Html.text model.input ]
   in
   let output =
         Html.div
-            [ basicStyle, Attr.contenteditable False, Attr.id "output" ]
+            [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
             [ Html.text model.output ]
   in
   let btn =
         Html.button
             [ Attr.contenteditable False
+            , buttonStyle
             , Events.onMouseDown btnMailbox.address "clear"
             , Events.onClick btnMailbox.address "update"
             , Events.onMouseUp btnMailbox.address "tex"
-            ]
+            ] 
             [ Html.text "See Result" ]
   in
   Html.div
-      [ basicStyle ]
+      [ containerStyle ]
       [ input, btn, output ]
 
 initModel : Model

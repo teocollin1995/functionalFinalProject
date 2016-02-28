@@ -9,7 +9,8 @@ window.initializers.push(function (elmRuntime) {
             tex();
         }
         else {
-            var s = window.document.getElementById("input").textContent;
+            var s = window.document.getElementById("input").value;
+            console.log(s);
             elmRuntime.ports.signalFromJS.send(s);
         }
     });
