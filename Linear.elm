@@ -10,9 +10,9 @@ module Linear
   extendMatrix, extendMatrixTo,
   submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors,
   transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,
-   elementWise, vectorMap2, dotProd, matrixMult,
+   elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector, matrixMult,
     invert, invertable, trace, diagProd, simpleDet,
-    eigenValues, eigenVectors) where 
+    eigenValues, eigenVectors,diagonalization,eigen) where 
 
 {-| The Linear module provides a variety of tools from Linear Algebra. Matrix and Vector are defined in expression, but tools for manipulating them (e.g. though maps, dot products, norms, row operations, determiants, eigen values, and what not) are stored here. 
 
@@ -56,13 +56,13 @@ Note that for all functions take rows and cols, the rows are alwalys given first
 @docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards
 
 # Operations on Two Matricies or Two Vectors
-@docs elementWise, vectorMap2, dotProd, matrixMult
+@docs elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector,matrixMult
 
 # Matrix properties
 @docs  invert, invertable, trace, diagProd, simpleDet
 
 # Numerical Linear Algebra 
-@docs eigenValues, eigenVectors
+@docs eigenValues, eigenVectors,diagonalization,eigen
 -}
 
 
@@ -82,7 +82,7 @@ import Native.CostlyLinear
 
 -}
 type alias Space a = 
-  {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a}
+  {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a, abs: a-> Float}
 
 
 {-| A record type produced by the specalize function that contains all the functions that require the space argument prefixed with the space a. So, if you wanted the identity function for the real numbers you might use (specalize realSpace).identity instead of identity realSpace.
@@ -103,6 +103,8 @@ type alias Specialization a =
     gaussianEliminationForward : Matrix a -> Matrix a,
     gaussianEliminationBackwards : Matrix a -> Matrix a,
     dotProd : Vector a -> Vector a -> a ,
+    vectorNorm : Vector a -> Float,
+    normalizeVector : Vector a -> Vector a,
     matrixMult : Matrix a -> Matrix a -> Matrix a,
     invert : Matrix a -> Maybe (Matrix a),
     invertable : Matrix a -> Bool,
@@ -129,6 +131,8 @@ specalize s =
       gaussianEliminationForward = gaussianEliminationForward s,
       gaussianEliminationBackwards = gaussianEliminationBackwards s,
       dotProd = dotProd s,
+      vectorNorm = vectorNorm s,
+      normalizeVector = normalizeVector s,
       matrixMult = matrixMult s,
       invert = invert s,
       invertable = invertable s,
@@ -146,7 +150,7 @@ complex = specalize complexSpace
 {-| An example of a space
 -}
 complexSpace : Space Expression.Complex
-complexSpace = {zero= Complex.zero, one= Complex.one, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal}
+complexSpace = {zero= Complex.zero, one= Complex.one, add= Complex.add, mult= Complex.mult, sub= Complex.sub, div= Complex.div, fromReal = Complex.fromReal, abs= Complex.abs}
 
 
 {-| Generates a vector of length n from a function that takes an index and generates a member of the vector:
@@ -896,6 +900,24 @@ dotProd space v1 v2  =
       mults = (List.map2 mult (Array.toList v1) (Array.toList v2))
     in
       List.foldr (add) zero mults
+
+{-| Takes the norm of the vector i.e the square root of the sum of the squares of the absolute values.
+
+-}
+
+vectorNorm : Space a -> Vector a -> Float
+vectorNorm s v = sqrt (Array.foldr (+) 0 (Array.map (\x -> (s.abs x )^2) v))
+
+{-| Normalizes a vector
+
+-}
+
+normalizeVector : Space a -> Vector a -> Vector a
+normalizeVector s v = 
+  let
+    norm = vectorNorm s v 
+  in
+    Array.map (\x -> s.mult (s.div s.one (s.fromReal norm )) x) v
     
 {-| Matrix multiplication.
 
@@ -1015,9 +1037,20 @@ simpleDet space m =
 
 --Just a way of checking that eigen returns what it should
 type alias EigenInfo = {values: Vector Expression.Complex, cols: Matrix Expression.Complex}
+{-|
 
+-}
 eigen : Matrix (Expression.Complex) -> Maybe EigenInfo --Maybe {values: Vector Complex, cols: Matrix Complex}
-eigen m = if isSquare m then Just (Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))) else Nothing
+eigen m = if not (isSquare m) then Nothing 
+          else
+            let 
+              x = (Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m)))
+              epsilon = 0.0000000001
+              epsizero = \x -> if (abs x) < epsilon then 0 else x
+              cepsizero = \x -> {re = epsizero x.re, im= epsizero x.im}
+            in
+              Just {values = Array.fromList (List.map cepsizero x.values), cols = map (cepsizero) (Array.fromList (List.map (Array.fromList) x.cols))}
+          
 
 
 {-| Retuns Just a vector of eigen values or nothing if the matrix is not square or something horrible happens. Uses native code.
@@ -1036,6 +1069,29 @@ eigenVectors : Matrix Expression.Complex -> Maybe (Matrix Expression.Complex)
 eigenVectors m = case (eigen m) of 
                    Just x -> Just x.cols
                    _ -> Nothing
+
+
+{-| Takes A and returns Nothing if A is not diagonalizable. If it is, returns P^-1, A, P. 
+
+-}
+
+diagonalization : Matrix Expression.Complex -> Maybe ((Matrix Expression.Complex,Matrix Expression.Complex,Matrix Expression.Complex))
+diagonalization m = 
+  case eigen m of 
+    Nothing -> Nothing --do we have eigne values and is it square
+    Just eigeninfo ->
+      let
+        r = nrows eigeninfo.cols
+        eigenVectors = transpose (eigeninfo.cols )
+      in
+        case (invert complexSpace eigenVectors) of --is the matrix invertable?
+          Nothing -> Nothing
+          Just pinverse -> let
+            diagnoal = setDiag eigeninfo.values (identity complexSpace r )
+         in
+           Just (pinverse, diagnoal,eigenVectors )
+
+      
 
 
 --Todo that is probably out of date:

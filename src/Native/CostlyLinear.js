@@ -6397,7 +6397,7 @@ var eigens = function(cmatrix){
 
     var crap = cMatrix(acc)    //converts our complex numbers to the Jmat complex type
     var matrix = Jmat.Matrix(crap) //creates the matrix
-    var eigens = Jmat.Matrix.eig(matrix) //eigen info
+    var eigens = Jmat.Matrix.eig(matrix,0) //eigen info
     var eigenvals = list(eigens.l.map(thereToOur)) //creates a list of eigen values in our complex type
     var eigencols = list(((eigens.v.e).map(reverseCVector)).map(list))
     return {values:eigenvals, cols: eigencols}

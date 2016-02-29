@@ -12,7 +12,12 @@ r =  Array.fromList [  Array.fromList [C.fromReal 1, C.fromReal 2, C.fromReal 5]
 
 
 eigen : Matrix (Complex) -> {values: Vector Complex, cols: Matrix Complex}
-eigen m = Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))
+eigen m = 
+  let
+    x = Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))
+  in
+    {values = Array.fromList x.values, cols = Array.fromList (List.map (Array.fromList) x.cols}
+  
 --randomness in a horrible horrible way... for testing purpose
 randomComplex : a -> Complex
 randomComplex = Native.CostlyLinear.random_complex
