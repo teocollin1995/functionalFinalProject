@@ -1,5 +1,5 @@
 module Linear 
-  (Space, complexSpace,
+  (Space, complexSpace,Specialization, specalize, complex,
   vector, matrix, rowVector, colVector,
   dimV, nrows, ncols,
   same, identity, isIdentity, permMatrix, allPermutationMatricies, isTriangular, isSquare,
@@ -20,10 +20,10 @@ In order to allow you to accomplish these operations in full generality, we have
 
 Note that for all functions take rows and cols, the rows are alwalys given first and then the cols. So for unsafeGetM : Int -> Int -> Matrix a -> a , the first argument is a row, the second is the column. 
 
-TODO:
+
 
 # Space 
-@docs Space, complexSpace
+@docs Space, complexSpace, Specialization, specalize, complex
 
 # Builders
 @docs vector, matrix, rowVector, colVector
@@ -84,6 +84,64 @@ import Native.CostlyLinear
 type alias Space a = 
   {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a}
 
+
+{-| A record type produced by the specalize function that contains all the functions that require the space argument prefixed with the space a. So, if you wanted the identity function for the real numbers you might use (specalize realSpace).identity instead of identity realSpace.
+
+-}
+
+type alias Specialization a = 
+  { identity : Int -> Matrix a,
+    isIdentity : Matrix a -> Bool,
+    permMatrix :  Int -> Int -> Int -> Matrix a,
+    allPermutationMatricies : Int -> List (Matrix a),
+    isTriangular : Matrix a -> Bool,
+    scaleVector : a -> Vector a -> Vector a,
+    scaleMatrix : a -> Matrix a -> Matrix a,
+    scaleRow : Int -> a -> Matrix a -> Matrix a ,
+    combineRow : a -> Int -> Int -> Matrix a -> Matrix a,
+    rowReduce : Matrix a -> Matrix a,
+    gaussianEliminationForward : Matrix a -> Matrix a,
+    gaussianEliminationBackwards : Matrix a -> Matrix a,
+    dotProd : Vector a -> Vector a -> a ,
+    matrixMult : Matrix a -> Matrix a -> Matrix a,
+    invert : Matrix a -> Maybe (Matrix a),
+    invertable : Matrix a -> Bool,
+    trace : Matrix a -> a,
+    diagProd : Matrix a -> a,
+    simpleDet : Matrix a -> a
+  }
+
+{-| Produces a specalization for a space as detailed above.
+
+-}
+specalize : Space a -> Specialization a 
+specalize s = 
+    { identity = identity s,
+      isIdentity = isIdentity s,
+      permMatrix =  permMatrix s,
+      allPermutationMatricies  = allPermutationMatricies  s,
+      isTriangular = isTriangular s,
+      scaleVector = scaleVector s,
+      scaleMatrix = scaleMatrix s,
+      scaleRow = scaleRow s, 
+      combineRow = combineRow s,
+      rowReduce = rowReduce s,
+      gaussianEliminationForward = gaussianEliminationForward s,
+      gaussianEliminationBackwards = gaussianEliminationBackwards s,
+      dotProd = dotProd s,
+      matrixMult = matrixMult s,
+      invert = invert s,
+      invertable = invertable s,
+      trace = trace s,
+      diagProd = diagProd s,
+      simpleDet = simpleDet s
+  }
+
+{-| The Complex Specalization
+
+-}
+complex : Specialization Expression.Complex
+complex = specalize complexSpace
 
 {-| An example of a space
 -}
