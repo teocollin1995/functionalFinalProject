@@ -16,7 +16,7 @@ eigen m =
   let
     x = Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))
   in
-    {values = Array.fromList x.values, cols = Array.fromList (List.map (Array.fromList) x.cols}
+    {values = Array.fromList x.values, cols = Array.fromList (List.map (Array.fromList) x.cols)}
   
 --randomness in a horrible horrible way... for testing purpose
 randomComplex : a -> Complex
