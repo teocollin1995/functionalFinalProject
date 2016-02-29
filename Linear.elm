@@ -5,7 +5,7 @@ module Linear
   same, identity, isIdentity, permMatrix, allPermutationMatricies, isTriangular, isSquare,
   vectorFromList, fromList, fromLists, toList, toLists, toVector,
   unsafeGetM, unsafeGetRow, unsafeGetCol, unsafeGetDiag,
-  set, setRow, setCol,
+  set, setRow, setCol,setDiag,
   map, indexedMap, mapVector, indexedMapVector,
   extendMatrix, extendMatrixTo,
   submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors,
@@ -41,7 +41,7 @@ Note that for all functions take rows and cols, the rows are alwalys given first
 @docs unsafeGetM, unsafeGetRow, unsafeGetCol, unsafeGetDiag
 
 # Setting
-@docs set, setRow, setCol
+@docs set, setRow, setCol,setDiag
 
 # Mapping
 @docs map, indexedMap, mapVector, indexedMapVector
@@ -434,6 +434,13 @@ setRow row newrow m = Array.set row newrow m
 
 setCol : Int -> Vector a -> Matrix a -> Matrix a 
 setCol col newCol m = indexedMap (\r ccol ret -> if ccol == col then (ArrayE.getUnsafe r newCol) else ret ) m
+{-| Sets the diagnoal of a matrix to a vector.
+
+-}
+
+
+setDiag : Vector a -> Matrix a -> Matrix a 
+setDiag v m = indexedMap (\row col a -> if row == col then (ArrayE.getUnsafe row v) else a) m
 
 
 
