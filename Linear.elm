@@ -556,7 +556,7 @@ minor x m  =
     top = unsafeGetM 0 x m
     minusTop = Array.slice 1 (rows) m --I'm not sure how efficient slice is or really anything about this library
     minusx = Array.map (\m -> Array.append (Array.slice 0 x m) (Array.slice (x+1) cols m)) minusTop
-    sign = if (x % 2 == 0) then 1.0 else (-1.0)
+    sign = (-1.0)^((toFloat x))
   in
     (top, sign, minusx)
     
@@ -916,6 +916,7 @@ simpleDet space m =
     (rows, cols) = (dimM m)
   in
     if rows == 0 || (rows /= cols) then Debug.crash "We are going to wrap this to make this test...."
+    else if (rows == 1) then (unsafeGetM 0 0 m)
     else if (rows == 2) then 
            let
              a = unsafeGetM 0 0 m
@@ -926,14 +927,16 @@ simpleDet space m =
              (space.sub (space.mult a d) (space.mult b c))
          else
            let
-             folder = ( \ (p, sgn, sub) start -> space.add start (space.mult (space.fromReal sgn) (space.mult p (simpleDet space sub))))
+             folder = ( \ (p, sgn, sub) start 
+                          -> space.add start (space.mult (space.fromReal sgn) (space.mult p (simpleDet space sub))))
            in
              Array.foldr folder (space.fromReal 0) (minors m)
 
 
 
 
-
+--wolframalpha output of a matirx
+--complex number printer
 
 
 

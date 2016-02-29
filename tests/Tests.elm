@@ -21,6 +21,11 @@ twobytwo = L.matrix 2 2 (\a b -> CL.randomComplex a)
 twoMatrix : List (Matrix Complex)
 twoMatrix = List.map (\x -> twobytwo) [0..4]
 
+--3x3
+threebythree : Matrix Complex
+threebythree = L.matrix 3 3 (\a b -> CL.randomComplex a)
+
+threeMatrix = List.map (\x -> threebythree) [0..4]
 --5x5
 fivebyfive : Matrix Complex
 fivebyfive = L.matrix 5 5 (\a b -> CL.randomComplex a)
@@ -35,19 +40,20 @@ tenMatrix : List (Matrix Complex)
 tenMatrix = List.map (\x -> tenbyten) [0..4]
 
 
-
+epsilon = 0.1
 --detTest
 ourDet = L.simpleDet L.complexSpace
 thereDet = CL.testDet 
-testDet m = (ourDet m) == (thereDet m)
+testDet m = C.abs (C.sub (ourDet m) (thereDet m)) < epsilon
 testDetList l = List.all (\x -> x == True) (List.map (testDet) l)
 
 testDetOne = test "one by one det" (assert (testDetList oneMatrix))
 testDetTwo = test "two by two det" (assert (testDetList twoMatrix))
+testDetThree = test "Three by three det" (assert (testDetList threeMatrix))
 testDetFive = test "five by five det" (assert (testDetList fiveMatrix))
 testDetTen = test "ten by ten det" (assert (testDetList tenMatrix))
 detTest : Test
-detTest = suite "Determiants Tests" [testDetOne, testDetTwo, testDetFive, testDetTen ]
+detTest = suite "Determiants Tests" [testDetOne, testDetTwo,testDetThree, testDetFive, testDetTen ]
 
 
 linearSuite : Test

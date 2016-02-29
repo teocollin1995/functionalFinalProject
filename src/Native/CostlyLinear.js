@@ -4491,18 +4491,18 @@ Jmat.Matrix.determinant = function(a) {
   if(a.w == 2) return a.e[0][0].mul(a.e[1][1]).sub(a.e[0][1].mul(a.e[1][0]));
 
   // Laplace expansion, this is an O(n!) algorithm, so not used
-  /*var result = Jmat.Complex(0);
+  var result = Jmat.Complex(0);
   for(var x = 0; x < a.w; x++) {
     result = result.add(a.e[0][x].mul(Jmat.Matrix.cofactor(a, 0, x)));
-  }*/
-
-  // Calculate with LU decomposition
-  var lu = Jmat.Matrix.doolittle_lup_(a);
-  var result = Jmat.Complex(1);
-  for(var i = 0; i < a.w; i++) {
-    result = result.mul(lu[0].e[i][i]);
   }
-  if(lu[2] & 1) result = result.neg();
+
+  // // Calculate with LU decomposition
+  // var lu = Jmat.Matrix.doolittle_lup_(a);
+  // var result = Jmat.Complex(1);
+  // for(var i = 0; i < a.w; i++) {
+  //   result = result.mul(lu[0].e[i][i]);
+  // }
+  // if(lu[2] & 1) result = result.neg();
 
 
   return result;
@@ -6406,7 +6406,7 @@ var eigens = function(cmatrix){
 
 //evil but for testing
 var random_complex = function( z){
-    x = Jmat.Complex.random(0,1000);
+    x = Jmat.Complex.random(0,20);
     return({re:x.re,im:x.im});
 };
 
