@@ -6410,6 +6410,12 @@ var random_complex = function( z){
     return({re:x.re,im:x.im});
 };
 
+var random_int = function(z){
+    x = (Jmat.Complex.random(0,10))
+    y = Math.ceil(Math.sqrt(Math.pow(x.re,2) + Math.pow(x.im,2)))
+    return(y);
+};
+
 //test det
 var test_det = function(matrix){
     newmatrix = ourMatrixToThereMatrix(matrix);
@@ -6419,7 +6425,11 @@ var test_det = function(matrix){
 
 };
 
-
+var test_trace = function(matrix){
+    newmatrix = ourMatrixToThereMatrix(matrix);
+    trace = Jmat.Matrix.trace(newmatrix)
+    return({re:trace.re,im:trace.im})
+};
 
 // make is a function that takes an instance of the 
 // elm runtime 
@@ -6439,7 +6449,7 @@ var make = function make(elm) {
     if (elm.Native.CostlyLinear.values) return elm.Native.CostlyLinear.values;
 
     // return the object of your module's stuff!
-    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det};
+    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det, 'random_int': random_int, 'test_trace': test_trace};
 };
 
 // setup code for MyModule

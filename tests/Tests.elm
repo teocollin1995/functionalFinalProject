@@ -56,8 +56,30 @@ detTest : Test
 detTest = suite "Determiants Tests" [testDetOne, testDetTwo,testDetThree, testDetFive, testDetTen ]
 
 
+nonSquareRandomMatrix = L.matrix (CL.randomInt 0) (CL.randomInt 1) (\x y -> CL.randomComplex x)
+tenNonSquareRandomMatrix = List.map (\x -> nonSquareRandomMatrix) [0..9]
+
+ourTrace = L.trace L.complexSpace
+ourDiagProd = L.diagProd L.complexSpace
+thereTraceAndDiagProd = CL.testTrace 
+testTrace m = C.abs (C.sub (ourTrace m) (thereTraceAndDiagProd m) ) < epsilon 
+testTraceList  l = List.all (\x -> x == True) (List.map (testTrace) l)
+testDiagProd m = C.abs (C.sub (ourDiagProd m) (thereTraceAndDiagProd m) ) < epsilon 
+testDiagProdList l = List.all (\x -> x == True) (List.map (testDiagProd) l)
+
+diagProdTest : Test
+diagProdTest = test "Diagnoal Product" (assert (testDiagProdList tenNonSquareRandomMatrix))
+
+testTraceOne = test "one by one trace" (assert (testTraceList oneMatrix))
+testTraceTwo = test "two by two trace" (assert (testTraceList twoMatrix))
+testTraceThree = test "Three by three trace" (assert (testTraceList threeMatrix))
+testTraceFive = test "five by five trace" (assert (testTraceList fiveMatrix))
+testTraceTen = test "ten by ten trace" (assert (testTraceList tenMatrix))
+traceTest : Test
+traceTest = suite "Trace Tests" [testTraceOne, testTraceTwo,testTraceThree, testTraceFive, testTraceTen ] 
+
 linearSuite : Test
-linearSuite = suite "" [detTest]
+linearSuite = suite "" [detTest,diagProdTest,traceTest]
 
 
 allTests : Test

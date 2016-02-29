@@ -19,3 +19,9 @@ randomComplex = Native.CostlyLinear.random_complex
 
 testDet : Matrix (Complex) -> Complex
 testDet m = Native.CostlyLinear.test_det  (Array.toList (Array.map (Array.toList) m))
+
+randomInt : a -> Int 
+randomInt = Native.CostlyLinear.random_int
+--doubles as diagproduct if matrix is nonsquare
+testTrace : Matrix (Complex) -> Complex
+testTrace m = Native.CostlyLinear.test_trace (Array.toList (Array.map (Array.toList) m))
