@@ -82,7 +82,15 @@ import Native.CostlyLinear
 
 -}
 type alias Space a = 
-  {zero: a, one: a, add: a -> a -> a, mult: a -> a -> a, sub: a -> a -> a, div: a -> a -> a , fromReal : Float -> a, abs: a-> Float}
+  { zero: a,
+    one: a,
+    add: a -> a -> a,
+    mult: a -> a -> a,
+    sub: a -> a -> a,
+    div: a -> a -> a,
+    fromReal : Float -> a,
+    abs: a-> Float
+  }
 
 
 {-| A record type produced by the specalize function that contains all the functions that require the space argument prefixed with the space a. So, if you wanted the identity function for the real numbers you might use (specalize realSpace).identity instead of identity realSpace.
