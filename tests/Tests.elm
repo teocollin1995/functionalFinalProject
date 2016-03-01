@@ -55,20 +55,31 @@ testDetTen = test "ten by ten det" (assert (testDetList tenMatrix))
 detTest : Test
 detTest = suite "Determiants Tests" [testDetOne, testDetTwo,testDetThree, testDetFive, testDetTen ]
 
-
+--nonSquare matrix
 nonSquareRandomMatrix = L.matrix (CL.randomInt 0) (CL.randomInt 1) (\x y -> CL.randomComplex x)
 tenNonSquareRandomMatrix = List.map (\x -> nonSquareRandomMatrix) [0..9]
 
+fiveByTen = L.matrix 5 10 (\x y -> CL.randomComplex x)
+tenByFive = L.matrix 10 5 (\x y -> CL.randomComplex x)
+fiveByTenMatrix = List.map (\x -> fiveByTen) [0..4]
+tenByFiveMatrix = List.map (\x -> tenByFive) [0..4]
+
+--Test trace and diagproduct
 ourTrace = L.trace L.complexSpace
 ourDiagProd = L.diagProd L.complexSpace
-thereTraceAndDiagProd = CL.testTrace 
+thereTraceAndDiagProd = CL.testTrace
 testTrace m = C.abs (C.sub (ourTrace m) (thereTraceAndDiagProd m) ) < epsilon 
 testTraceList  l = List.all (\x -> x == True) (List.map (testTrace) l)
 testDiagProd m = C.abs (C.sub (ourDiagProd m) (thereTraceAndDiagProd m) ) < epsilon 
 testDiagProdList l = List.all (\x -> x == True) (List.map (testDiagProd) l)
 
+
+diagProdTestR : Test
+diagProdTestR =  test "Diagnoal Product Random" (assert (testDiagProdList tenNonSquareRandomMatrix))
+diagProdTestTenByFive =  test "Diagnoal Product ten by five" (assert (testDiagProdList tenByFiveMatrix))
+diagProdTestFiveByTen =  test "Diagnoal Product five by ten" (assert (testDiagProdList fiveByTenMatrix))
 diagProdTest : Test
-diagProdTest = test "Diagnoal Product" (assert (testDiagProdList tenNonSquareRandomMatrix))
+diagProdTest = suite "Diag Prod Test" [diagProdTestR,diagProdTestTenByFive,diagProdTestFiveByTen]
 
 testTraceOne = test "one by one trace" (assert (testTraceList oneMatrix))
 testTraceTwo = test "two by two trace" (assert (testTraceList twoMatrix))
