@@ -973,6 +973,8 @@ invertable space m1 = case (invert space m1) of
                   _ -> True
 
 
+
+
 {-| Calculates the trace of a matrix.
 
 -}
