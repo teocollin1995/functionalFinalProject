@@ -88,6 +88,32 @@ testTraceTen = test "ten by ten trace" (assert (testTraceList tenMatrix))
 traceTest : Test
 traceTest = suite "Trace Tests" [testTraceOne, testTraceTwo,testTraceThree, testTraceFive, testTraceTen ] 
 
+
+
+
+
+
+ourInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
+ourInverse m = L.invert L.complexSpace m
+thereInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
+thereInverse m = CL.testInverse m
+testInverse : Matrix (Complex) -> Bool
+testInverse m = let (o,t) = (ourInverse m,thereInverse m) 
+                in 
+                  case (o,t) of 
+                    (Nothing,Nothing) -> True
+                    (Nothing, _) -> False
+                    (_, Nothing) -> False
+                    (Just oo,Just tt) ->
+                      List.all (\x -> x== True) (L.toList (L.elementWise (\x y -> (C.abs (C.sub x y)) <= epsilon) (oo) (tt)))
+
+--
+
+
+
+
+
+
 linearSuite : Test
 linearSuite = suite "" [detTest,diagProdTest,traceTest]
 

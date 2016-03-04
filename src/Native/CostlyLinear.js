@@ -5280,10 +5280,7 @@ Jmat.Matrix.jacobi_ = function(m, opt_epsilon, opt_normalize) {
   return { l: l, v: v };
 };
 
-// Returns the eigenvectors and eigenvalues of m as { l: eigenvalues, v: eigenvectors }
-// eigenvalues as n*1 column vector, eigenvectors as n*n matrix
-// for each column of v and corresponding eigenvalue: A*v = l*v (l represents lambda, A is m)
-// opt_normalize is how to normalize the eigenvectors: 0: don't (length unspecified), 1: last element equals 1, 2: length 1. The default is "1".
+
 Jmat.Matrix.eig = function(m, opt_normalize) {
   var M = Jmat.Matrix;
   if(m.w != m.h || m.w < 1) return null;
@@ -5294,13 +5291,15 @@ Jmat.Matrix.eig = function(m, opt_normalize) {
   if(M.isReal(m) && M.isSymmetric(m)) return Jmat.Matrix.jacobi_(m, opt_normalize);
 
   var l = M.eigval(m);
+  
 
   // Fullfill our promise of eigenvalues sorted from largest to smallest magnitude, the eigenvalue algorithm usually has them somewhat but not fully correctly sorted
   l.sort(function(a, b) { return b.abssq() - a.abssq(); });
-
+    for(var i = 0; i < l.length; i++) if(Jmat.Complex.nearr(l[i], 0, 1e-15)) l[i] = Jmat.Complex(0); // this avoids numerical instability problems with calculation of eigenvectors in case of eigenvalues that should be zero, but are close to it instead
   var v = null;
   // TODO: use more efficient algorithm for eigenvectors, e.g. something that produces them as side-effect of the eigenvalue calculation
   // TODO: for hermitian or symmetric matrix, use faster algorithm for eigenvectors
+  // TODO: solve numerical imprecisions, e.g. see how high epsilon eigenVectorFor is using to circumvent various problems in unstable ways
   var v = new M(n, n);
   for(var j = 0; j < n; j++) {
     var g = M.eigenVectorFor(m, l[j], opt_normalize);
@@ -6397,7 +6396,7 @@ var eigens = function(cmatrix){
 
     var crap = cMatrix(acc)    //converts our complex numbers to the Jmat complex type
     var matrix = Jmat.Matrix(crap) //creates the matrix
-    var eigens = Jmat.Matrix.eig(matrix,0) //eigen info
+    var eigens = Jmat.Matrix.eig(matrix) //eigen info
     var eigenvals = list(eigens.l.map(thereToOur)) //creates a list of eigen values in our complex type
     var eigencols = list(((eigens.v.e).map(reverseCVector)).map(list))
     return {values:eigenvals, cols: eigencols}
@@ -6425,6 +6424,26 @@ var test_det = function(matrix){
 
 };
 
+
+var test_inverse = function(matrix){
+    newmatrix = ourMatrixToThereMatrix(matrix);
+  //  inv = 2
+    inv = Jmat.Matrix.inv(newmatrix)
+    //var Just = function (a) {    return {ctor: "Just",_0: a};};
+    if (inv == null){
+        return(0);
+    }
+    else {
+        //return(Just(inv));
+        inv2 = list((((inv).e).map(reverseCVector)).map(list));
+
+        return(inv2);
+    }
+
+//{ctor: "Nothing"}
+    
+};
+
 var test_trace = function(matrix){
     newmatrix = ourMatrixToThereMatrix(matrix);
     trace = Jmat.Matrix.trace(newmatrix)
@@ -6449,7 +6468,7 @@ var make = function make(elm) {
     if (elm.Native.CostlyLinear.values) return elm.Native.CostlyLinear.values;
 
     // return the object of your module's stuff!
-    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det, 'random_int': random_int, 'test_trace': test_trace};
+    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det, 'random_int': random_int, 'test_trace': test_trace, 'test_inverse':test_inverse};
 };
 
 // setup code for MyModule

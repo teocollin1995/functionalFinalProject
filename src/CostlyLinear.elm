@@ -30,3 +30,8 @@ randomInt = Native.CostlyLinear.random_int
 --doubles as diagproduct if matrix is nonsquare
 testTrace : Matrix (Complex) -> Complex
 testTrace m = Native.CostlyLinear.test_trace (Array.toList (Array.map (Array.toList) m))
+
+testInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
+testInverse m = if testDet m == {re=0,im =0 } then Nothing
+                else Just ( Array.fromList (List.map (Array.fromList) (Native.CostlyLinear.test_inverse (Array.toList (Array.map (Array.toList) m)))))
+                 

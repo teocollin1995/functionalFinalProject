@@ -53,10 +53,10 @@ Note that for all functions take rows and cols, the rows are alwalys given first
 @docs submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors
 
 # Single Matrix, Row Operations, and Single Vector Operations 
-@docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards
+@docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,vectorNorm, normalizeVector
 
 # Operations on Two Matricies or Two Vectors
-@docs elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector,matrixMult
+@docs elementWise, vectorMap2, dotProd,matrixMult
 
 # Matrix properties
 @docs  invert, invertable, trace, diagProd, simpleDet
@@ -840,7 +840,24 @@ gaussianEliminationHelperBackwards space row m =
                       
 
 
+{-| Takes the norm of the vector i.e the square root of the sum of the squares of the absolute values.
 
+-}
+
+vectorNorm : Space a -> Vector a -> Float
+vectorNorm s v = sqrt (Array.foldr (+) 0 (Array.map (\x -> (s.abs x )^2) v))
+
+{-| Normalizes a vector
+
+-}
+
+normalizeVector : Space a -> Vector a -> Vector a
+normalizeVector s v = 
+  let
+    norm = vectorNorm s v 
+  in
+    Array.map (\x -> s.mult (s.div s.one (s.fromReal norm )) x) v
+  
 
 
 
@@ -901,24 +918,7 @@ dotProd space v1 v2  =
     in
       List.foldr (add) zero mults
 
-{-| Takes the norm of the vector i.e the square root of the sum of the squares of the absolute values.
-
--}
-
-vectorNorm : Space a -> Vector a -> Float
-vectorNorm s v = sqrt (Array.foldr (+) 0 (Array.map (\x -> (s.abs x )^2) v))
-
-{-| Normalizes a vector
-
--}
-
-normalizeVector : Space a -> Vector a -> Vector a
-normalizeVector s v = 
-  let
-    norm = vectorNorm s v 
-  in
-    Array.map (\x -> s.mult (s.div s.one (s.fromReal norm )) x) v
-    
+  
 {-| Matrix multiplication.
 
 -}
