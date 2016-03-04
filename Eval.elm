@@ -79,18 +79,19 @@ unparseUOp op =
 unparseBOp : Op -> Exp -> Exp -> Exp
 unparseBOp op =
   let foo = genBinaryFunc op in
+  let dummy = L.identity expSpace 0 in
   case op of
-    Plus -> foo { realFun = (+), complexFun = C.add, matrixFun = always identity } -- the matrixFun needs to be added
-    Minus -> foo { realFun = (-), complexFun = C.sub, matrixFun = always identity }
-    Mult -> foo { realFun = (*), complexFun = C.mult, matrixFun = always identity }
-    Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always identity }
-    Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = always identity }
+    Plus -> foo { realFun = (+), complexFun = C.add, matrixFun = matrixMult }
+    Minus -> foo { realFun = (-), complexFun = C.sub, matrixFun = matrixMinus }
+    Mult -> foo { realFun = (*), complexFun = C.mult, matrixFun = matrixMult }
+    Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always <| always dummy }
+    Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = always <| always dummy }
     _    -> Debug.crash "unparseBOp"
 
 type alias BinaryFunc =
   { realFun : Float -> Float -> Float
   , complexFun : Complex -> Complex -> Complex
-  , matrixFun : Matrix Exp -> Matrix Exp -> Matrix Exp
+  , matrixFun : Exp -> Exp -> Matrix Exp
   }
                 
 genBinaryFunc : Op -> BinaryFunc -> Exp -> Exp ->  Exp
@@ -100,5 +101,57 @@ genBinaryFunc op f e1 e2 =
     (EReal x, EComplex y) -> EComplex <| f.complexFun (C.fromReal x) y
     (EComplex x, EReal y) -> EComplex <| f.complexFun x (C.fromReal y)
     (EComplex x, EComplex y) -> EComplex <| f.complexFun x y
-    (EMatrix m1, EMatrix m2) -> EMatrix <| f.matrixFun m1 m2
-    _   -> Debug.crash <| toString op
+    _   -> EMatrix <| f.matrixFun e1 e2
+
+type alias NumBinaryFunc =
+  { real: Float -> Float -> Float
+  , complex : Complex -> Complex -> Complex
+  }
+
+numBinaryFunc : Op -> NumBinaryFunc -> Exp -> Exp -> Exp
+numBinaryFunc op f e1 e2 =
+  case (e1, e2) of
+    (EReal x, EReal y) -> EReal <| f.real x y
+    (EReal x, EComplex y) -> EComplex <| f.complex (C.fromReal x) y
+    (EComplex x, EReal y) -> EComplex <| f.complex x (C.fromReal y)
+    (EComplex x, EComplex y) -> EComplex <| f.complex x y
+    _    -> Debug.crash <| "numBinaryFunc: " ++ toString op
+
+-- expressions space
+expSpace : L.Space Exp
+expSpace =
+  { zero = EComplex C.zero
+  , one  = EComplex C.one
+  , add  = numBinaryFunc Plus { real = (+), complex = C.add }
+  , mult = numBinaryFunc Mult { real = (*), complex = C.mult }
+  , sub  = numBinaryFunc Minus { real = (-), complex = C.sub }
+  , div  = numBinaryFunc Frac { real = (/), complex = C.div }
+  , fromReal = EComplex << C.fromReal
+  , abs  = \e ->
+             case e of
+               EReal x -> abs x
+               EComplex x -> C.abs x
+               _  -> Debug.crash "abs"
+  }
+
+matrixMult : Exp -> Exp -> Matrix Exp
+matrixMult e1 e2 =
+  case (e1,e2) of
+    (EMatrix m1, EMatrix m2) -> L.matrixMult expSpace m1 m2
+    (EReal x, EMatrix m) -> L.scaleMatrix expSpace e1 m
+    (EComplex x, EMatrix m) -> L.scaleMatrix expSpace e1 m
+    (EMatrix m, EReal x) -> L.scaleMatrix expSpace e2 m
+    (EMatrix m, EComplex x) -> L.scaleMatrix expSpace e2 m
+    _ -> Debug.crash "matrixMult"
+
+matrixPlus : Exp -> Exp -> Matrix Exp
+matrixPlus e1 e2 =
+  case (e1, e2) of
+    (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.add m1 m2
+    _ -> Debug.crash "matrixPlus"
+
+matrixMinus : Exp -> Exp -> Matrix Exp
+matrixMinus e1 e2 =
+  case (e1, e2) of
+    (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.sub m1 m2
+    _ -> Debug.crash "matrixMinus"
