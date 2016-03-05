@@ -8,13 +8,15 @@ type Exp =
   EBinaryOp Op Exp Exp
   | EUnaryOp Op Exp
   | EConst Op
-  | Variable String
+  | EVar Var
   | EReal Real
   | EComplex Complex 
   | EPoly Poly
   | EMatrix (Matrix Exp)
   | EVector (Vector Exp)
+  | EFun (List Var) Exp
 
+type alias Var = String
                 
 type Poly = List Mono
 type alias Mono = { coeff : Float, var: String, pow: Int}
@@ -38,5 +40,12 @@ type Op =
    -- binary ops
    | Plus | Minus | Mult | Frac
    | Pow | Mod
-   --| Derv --We may want people to be able to add these in with other expressions? - we will add this when we write the differentiator
+   -- domain specific operators
+   | Derv
+   | Integral
+   | Det
+   | EigenValue
+   | EigenVector
+   | Solve
+   -- more to be added
    
