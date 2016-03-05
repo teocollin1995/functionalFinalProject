@@ -14,9 +14,10 @@ type Exp =
   | EPoly Poly
   | EMatrix (Matrix Exp)
   | EVector (Vector Exp)
-  | EFun (List Var) Exp
+  | EFun Name (List Var) Exp -- for example f(x,y) = x^2 + y^2
 
 type alias Var = String
+type alias Name = String
                 
 type Poly = List Mono
 type alias Mono = { coeff : Float, var: String, pow: Int}

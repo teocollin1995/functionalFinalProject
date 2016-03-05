@@ -73,6 +73,15 @@ float =
 -- include the parser for float
 -- expand parseExp to include all Ops
 
+isAlphaNum : Char -> Bool
+isAlphaNum c = Char.isUpper c || Char.isLower c || Char.isDigit c
+
+isLetter : Char -> Bool
+isLetter c = Char.isUpper c || Char.isLower c
+
+isSpace : Char -> Bool
+isSpace c = c == ' ' || c == '\t' || c == '\n'
+            
 intOrFloat : Parser Float
 intOrFloat = float <++ (toFloat <$> integer)
              
@@ -94,9 +103,6 @@ parseComplex =
 
 parseNum : Parser Exp
 parseNum = parseComplex <++ parseReal
-
-isSpace : Char -> Bool
-isSpace a  = a == ' ' || a == '\n' || a == '\t'
              
 skipSpaces : Parser ()
 skipSpaces = P.map (\_ -> ()) <| P.many <| P.satisfy isSpace
@@ -108,7 +114,7 @@ parens p =
 comma = P.satisfy ((==) ',')
 left_curly = P.satisfy ((==) '{')
 right_curly = P.satisfy ((==) '}')
-              
+
 maybeParens : Parser a -> Parser a
 maybeParens p =
   P.between (skipSpaces *> (P.optional1 <| P.token "(")) (skipSpaces *> (P.optional1 <| P.token ")")) p
@@ -146,7 +152,29 @@ parseVector =
   P.recursively <| \_ ->
     P.between left_curly right_curly <|
      P.map A.fromList <| P.separatedBy parseExp comma
-    
+
+parseFun : Parser Exp
+parseFun =
+  P.recursively <| \_ ->
+    parseVar >>= \name ->
+      parens (P.separatedBy parseVar (skipSpaces *> comma)) >>= \vars ->
+        skipSpaces *>
+        P.satisfy ((==) '=') *>
+        parseExp >>= \e ->
+          P.succeed <| EFun name vars e
+
+parseVar : Parser Var
+parseVar =
+  skipSpaces *>
+  P.some (P.satisfy (\x -> isAlphaNum x && not (isSpace x))) >>= \s ->
+    case s of
+      [] -> Debug.crash "impossible"
+      c :: cs -> if isLetter c then P.succeed <| String.fromList s
+                 else P.empty
+
+parseEVar : Parser Exp
+parseEVar = EVar <$> parseVar
+
 allOps : List String
 allOps =
   ["pi","e"
@@ -213,7 +241,7 @@ parseExp = P.recursively <| \_ ->
                 (token1 (EBinaryOp Pow) "^")
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
-        prec4 = P.recursively <| \_ -> parseMatrix <++ parseNum <++ parseConst <++ parens prec0
+        prec4 = P.recursively <| \_ -> parseFun <++ parseEVar <++ parseMatrix <++ parseNum <++ parseConst <++ parens prec0
    in prec0
 
 parse : String -> Result String Exp
