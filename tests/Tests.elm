@@ -93,24 +93,36 @@ traceTest = suite "Trace Tests" [testTraceOne, testTraceTwo,testTraceThree, test
 
 
 
-ourInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
-ourInverse m = L.invert L.complexSpace m
-thereInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
-thereInverse m = CL.testInverse m
+-- ourInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
+-- ourInverse m = L.invert L.complexSpace m
+-- thereInverse : Matrix (Complex) -> Maybe (Matrix (Complex))
+-- thereInverse m = CL.testInverse m
+-- testInverse : Matrix (Complex) -> Bool
+-- testInverse m = let (o,t) = (ourInverse m,thereInverse m) 
+--                 in 
+--                   case (o,t) of 
+--                     (Nothing,Nothing) -> True
+--                     (Nothing, _) -> False
+--                     (_, Nothing) -> False
+--                     (Just oo,Just tt) ->
+--                       List.all (\x -> x== True) (L.toList (L.elementWise (\x y -> (C.abs (C.sub x y)) <= epsilon) (oo) (tt)))
 testInverse : Matrix (Complex) -> Bool
-testInverse m = let (o,t) = (ourInverse m,thereInverse m) 
-                in 
-                  case (o,t) of 
-                    (Nothing,Nothing) -> True
-                    (Nothing, _) -> False
-                    (_, Nothing) -> False
-                    (Just oo,Just tt) ->
-                      List.all (\x -> x== True) (L.toList (L.elementWise (\x y -> (C.abs (C.sub x y)) <= epsilon) (oo) (tt)))
+testInverse m = 
+  let
+    ourInverse = L.invert L.complexSpace m
+    testDet = thereDet m
+  in
+    if testDet == {re= 0, im=0} then ourInverse == Nothing
+    else
+      case ourInverse of 
+        Just i -> CL.testInverse m i
+        _ -> False
+      
 
---
-
-
-
+fromJust : Maybe a -> a
+fromJust x = case x of 
+               Just y ->y
+               _ -> Debug.crash ""
 
 
 

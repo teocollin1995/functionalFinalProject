@@ -6425,22 +6425,30 @@ var test_det = function(matrix){
 };
 
 
-var test_inverse = function(matrix){
-    newmatrix = ourMatrixToThereMatrix(matrix);
-  //  inv = 2
-    inv = Jmat.Matrix.inv(newmatrix)
-    //var Just = function (a) {    return {ctor: "Just",_0: a};};
-    if (inv == null){
-        return(0);
-    }
-    else {
-        //return(Just(inv));
-        inv2 = list((((inv).e).map(reverseCVector)).map(list));
+var test_inverse = function(matrix,inverted){
+    return(0);
+    // newmatrix = ourMatrixToThereMatrix(matrix);
 
-        return(inv2);
-    }
+    // inv = Jmat.Matrix.inv(newmatrix)
 
-//{ctor: "Nothing"}
+    // if (inv == null){
+    //     return(0);
+    // }
+    // else {
+    //     return(0);
+    //    // inv2 = list((((inv).e).map(reverseCVector)).map(list));
+    //     invertedmatrix = ourMatrixToThereMatrix(inverted)
+    //     near = Jmat.Matrix.near(inv,invertedmatrix)
+    //     if (near){
+    //         return(1);
+    //     }
+    //     else {
+    //         return(0);
+    //     }
+
+    // }
+
+
     
 };
 
