@@ -110,8 +110,9 @@ evtMailbox = mailbox (UpModel identity)
 
 -- add more fields to model if necessary
 type alias Model =
-  { input : String,
-    output : String
+  { input : String
+  , output : String
+  , display : Bool
   }
 
 type Event = UpModel (Model -> Model)
@@ -133,17 +134,22 @@ view model =
                     [ Html.text model.input ]
         in
         let output =
-              Html.div
+              if model.display == True then
+                Html.div
                     [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
                     [ Html.text model.output ]
+              else
+                Html.div
+                    [ outputStyle, Attr.contenteditable False, Attr.id "output"]
+                    []
         in
         let btn =
             Html.button
               [ Attr.contenteditable False
               , buttonStyle
-              , Events.onMouseDown btnMailbox.address "clear"
-              , Events.onClick btnMailbox.address "update"
-              , Events.onMouseUp btnMailbox.address "tex"
+              , Events.onMouseDown btnMailbox.address "update"
+              --, Events.onClick btnMailbox.address "update"
+              , Events.onMouseUp btnMailbox.address model.output
               ] 
               [ Html.text "See Result" ]
         in
@@ -167,13 +173,16 @@ view model =
      Html.body [ bodyStyle ] [ header, body ]
 
 initModel : Model
-initModel = { input = "", output = ""}
+initModel = { input = "", output = "", display = True}
 
 --- interaction with javascript ---
 
 eventsFromJS : Signal Event 
 eventsFromJS =
-  let foo s = UpModel <| \model -> { input = s, output = "$$" ++ compute s ++ "$$" } in
+  let foo s =
+        if s == "false" then UpModel <| \model -> { model | display = False }
+        else UpModel <| \model -> { model | input = s, output = "$$" ++ compute s ++ "$$" }
+  in
   Signal.map foo signalFromJS
 
 port signalFromJS : Signal String
