@@ -17,39 +17,45 @@ basicStyle =
       , ("font-family", "monospace")
       , ("white-space","pre")
       ]
-
+             
 containerStyle : Attribute
 containerStyle =
   Attr.style <|
       basicStyle ++
            [ ("position","relative")
+           , ("top", "50pt")
+           , ("left","200pt")
            , ("width","800pt")
+           --, ("height", "100%")
            ]
       
 inputStyle : Attribute
 inputStyle =
   Attr.style <|
       basicStyle ++
-             [ ("position","absolute")
-             , ("height","100pt")
+             [ ("position","relative")
+             --, ("height","100pt")
              , ("width", "300pt")
-             , ("left", "0pt")
+             --, ("left", "0pt")
              , ("border", "3pt")
              , ("border-style", "solid")
              , ("border-color","blue")
+             , ("placeholder", "'Enter your expression here'")
              ]
 
 outputStyle : Attribute
 outputStyle =
   Attr.style <|
       basicStyle ++
-             [ ("position","absolute")
+             [ ("position","relative")
              , ("height", "100pt")
              , ("width","300pt")
-             , ("left", "400pt")
+             --, ("top","50pt")
+             --, ("left", "400pt")
              , ("border", "3pt")
              , ("border-style", "solid")
              , ("border-color", "green")
+             , ("background-color", "white")
              ]
 
 buttonStyle : Attribute
@@ -67,7 +73,29 @@ buttonStyle =
       , ("font-size","16pt")
       , ("cursor", "pointer")
       ]
+
+captionStyle : Attribute
+captionStyle =
+  Attr.style
+      [ ("font-size", "36pt")
+      , ("font-family","Times New Roman")
+      , ("text-align","center")
+      , ("color", "red")
+      ]
+
+captionStyle1 : Attribute
+captionStyle1 =
+  Attr.style
+      [ ("font-size", "24pt")
+      , ("font-family", "Courier")
+      , ("color", "black")
+      ]
   
+bodyStyle : Attribute
+bodyStyle =
+  Attr.style
+      [ ("background-color", "grey") ]
+      
 compute : String -> String
 compute input =
   case Parser.parse input of
@@ -98,29 +126,45 @@ events = Signal.merge evtMailbox.signal eventsFromJS
          
 view : Model -> Html
 view model =
-  let input =
-        Html.textarea
-         [ inputStyle, Attr.contenteditable True, Attr.id "input" ]
-         [ Html.text model.input ]
-  in
-  let output =
+  let body = 
+        let input =
+              Html.textarea
+                    [ inputStyle, Attr.contenteditable True, Attr.id "input" ]
+                    [ Html.text model.input ]
+        in
+        let output =
+              Html.div
+                    [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
+                    [ Html.text model.output ]
+        in
+        let btn =
+            Html.button
+              [ Attr.contenteditable False
+              , buttonStyle
+              , Events.onMouseDown btnMailbox.address "clear"
+              , Events.onClick btnMailbox.address "update"
+              , Events.onMouseUp btnMailbox.address "tex"
+              ] 
+              [ Html.text "See Result" ]
+        in
+        let br = Html.br [] [] in
+        let inputCaption =
+              Html.span [ captionStyle1 ] [ Html.text "Input"]
+        in
+        let outputCaption =
+              Html.span [ captionStyle1 ] [ Html.text "Output"]
+        in
         Html.div
-            [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
-            [ Html.text model.output ]
+          [ containerStyle ]
+          [ inputCaption, br, input, btn, br, br, outputCaption, output ]
   in
-  let btn =
-        Html.button
-            [ Attr.contenteditable False
-            , buttonStyle
-            , Events.onMouseDown btnMailbox.address "clear"
-            , Events.onClick btnMailbox.address "update"
-            , Events.onMouseUp btnMailbox.address "tex"
-            ] 
-            [ Html.text "See Result" ]
-  in
-  Html.div
-      [ containerStyle ]
-      [ input, btn, output ]
+  let header =
+     let caption =
+           Html.h1 [ captionStyle ] [ Html.text "WolframAlpha in Elm" ]
+      in
+        Html.header [] [ caption ]
+  in      
+     Html.body [ bodyStyle ] [ header, body ]
 
 initModel : Model
 initModel = { input = "", output = ""}
