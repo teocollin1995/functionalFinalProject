@@ -162,14 +162,17 @@ parseFun =
         P.satisfy ((==) '=') *>
         parseExp >>= \e ->
           P.succeed <| EFun name vars e
-
+                            
 parseVar : Parser Var
 parseVar =
+  let pred x = isAlphaNum x && not (isSpace x) in
   skipSpaces *>
-  P.some (P.satisfy (\x -> isAlphaNum x && not (isSpace x))) >>= \s ->
+  P.some (P.satisfy pred) >>= \s ->
     case s of
       [] -> Debug.crash "impossible"
-      c :: cs -> if isLetter c then P.succeed <| String.fromList s
+      c :: cs -> if isLetter c then
+                   if List.any (flip String.contains (String.fromList s)) allOps then P.empty
+                   else P.succeed <| String.fromList s
                  else P.empty
 
 parseEVar : Parser Exp
