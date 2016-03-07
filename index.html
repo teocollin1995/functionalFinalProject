@@ -4,6 +4,9 @@
   <head>
     <title>Test interface</title>
     <script type="text/javascript" src="interface.js"></script>
+    <script type="text/javascript"
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" id ="TexScript">
+    </script>
     <meta charset="UTF-8">
     <style type="text/css" media="screen">
         #editor {
@@ -20,7 +23,46 @@
       window.initialPortValues = {};
       window.initializers      = [];
     </script>
-    <script type="text/javascript" src="port.js"></script>
+    <script>
+    window.initialPortValues["signalFromJS"] = "DUMMY";
+
+    window.initializers.push(function (elmRuntime) {
+	    elmRuntime.ports.signalToJS.subscribe(function (info) {
+		    if (info == "update") {
+			    var s = window.document.getElementById("input").value;
+			    console.log(s);
+			    elmRuntime.ports.signalFromJS.send(s);
+		    }
+		    else {
+			    console.log(info);
+                            //MathJax.Hub.Typeset();
+                            
+			    var math_node = MathJax.Hub.getAllJax("output");
+                            console.log(math_node);
+                            //var queue = MathJax.Hub.queue;
+                            var math = null;
+			    if (math_node.length > 0) {
+                                    math = math_node[0];
+                                    var node = window.document.getElementById("output");
+                                    removeAll(node);
+                                    node.textContent = info;
+                                    console.log(math);
+                                    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"output"])
+			    }
+                            else {
+                                    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"output"]);
+                            }
+		    }
+	    });
+    });
+
+    function removeAll(node) {
+            while(node.firstChild) {
+                    node.removeChild(node.firstChild);
+            }
+    }
+    
+    </script>
     <script>
       // Start up Elm
       var elmRuntime = Elm.fullscreen(Elm.Interface, window.initialPortValues);
