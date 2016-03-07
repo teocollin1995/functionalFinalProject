@@ -7,12 +7,6 @@ import ExpParser exposing (parse)
 --numericIntegration
 --plotting 
 
-fromOk : Result String a -> a
-fromOk mx =
-  case mx of
-    Ok a -> a
-    Err s -> Debug.crash <| "fromOk: " ++ s
-
 isInt : Float -> Bool
 isInt x = (toFloat <| round x) == x
 

@@ -4,13 +4,11 @@ import Expression exposing (..)
 import Complex as C
 import Linear as L
 
+import Array as A
+
 eval : Exp -> Exp
 eval e =
   case e of
-    EReal _ -> e
-    EComplex _ -> e
-    EMatrix _ -> e
-    EVector _ -> e
     EConst const ->
       case const of
         Pi -> EReal pi
@@ -49,7 +47,44 @@ realfunc op f e =
   case e of
     EReal x -> EReal <| f x
     _       -> Debug.crash <| toString op
-               
+
+isNum : Exp -> Bool
+isNum e =
+  case e of
+    EReal _ -> True
+    EComplex _ -> True
+    _ -> False
+
+toNum : Exp -> Complex
+toNum e =
+  case e of
+    EReal x -> C.fromReal x
+    EComplex x -> x
+    _  -> Debug.crash "fail to convert: not a number"
+          
+convertEVector : Vector Exp -> Vector Complex
+convertEVector v =
+  let foo a acc = if isNum a then A.push (toNum a) acc
+                  else Debug.crash "fail to convert: not a number"
+  in
+    A.foldr foo A.empty v
+   
+convertEMatrix : Matrix Exp -> Matrix Complex
+convertEMatrix m =
+  A.foldr (\a -> A.push (convertEVector a)) A.empty m
+
+vectorToExp : Vector Complex -> Vector Exp
+vectorToExp v = A.map EComplex v
+
+matrixToExp : Matrix Complex -> Matrix Exp
+matrixToExp m = A.map vectorToExp m
+
+unwrapMatrix : Exp -> Matrix Exp
+unwrapMatrix m =
+  case m of
+    EMatrix m' -> m'
+    _          -> Debug.crash "not a matrix"
+                  
 unparseUOp : Op -> Exp -> Exp
 unparseUOp op =
   let foo = genUnaryFunc op in
@@ -74,6 +109,13 @@ unparseUOp op =
              _   -> Debug.crash "abs"
     Re  -> bar C.real
     Im  -> bar C.imaginary
+    Det -> EComplex << L.simpleDet L.complexSpace << convertEMatrix << unwrapMatrix
+    EigenValue -> \m -> case L.eigenValues (convertEMatrix <| unwrapMatrix m) of
+                          Just x -> EVector <| vectorToExp x
+                          _      -> Debug.crash "eigenvalue"
+    EigenVector -> \m -> case L.eigenVectors (convertEMatrix <| unwrapMatrix m) of
+                           Just x -> EMatrix <| matrixToExp x
+                           _      -> Debug.crash "eigenvector"
     _  -> Debug.crash "unParseUOp"
 
 unparseBOp : Op -> Exp -> Exp -> Exp

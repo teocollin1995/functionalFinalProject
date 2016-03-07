@@ -51,8 +51,10 @@ parse p xs =
     case funP p xs of
         [] ->
             Err "parse error"
-        (x :: _) ->
-            Ok (fst x)
+        ys  ->
+          case List.filter (\x -> snd x =="") ys of
+                 [] -> Err "Incomplete parse"
+                 (x::_)  -> Ok (fst x)
 
 {-| Parse a `String` using a parser, return list of results -}
 parseAll : Parser result -> String -> Result String (List result)

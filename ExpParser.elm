@@ -127,8 +127,8 @@ maybeParens p =
                                                                      
 parseConst : Parser Exp
 parseConst =
-     ((\_ -> EConst Pi) <$> P.token "pi")
- <++ ((\_ -> EConst E) <$> P.token "e")
+     (token1 (EConst Pi) "pi")
+ <++ (token1 (EConst E) "e")
 
 parseUOp : Parser (Exp -> Exp)
 parseUOp = skipSpaces *>
@@ -144,20 +144,26 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp Sqrt) "sqrt")
   <++ (token1 (EUnaryOp Re) "re")
   <++ (token1 (EUnaryOp Im) "im")
-  <++ (token1 (EUnaryOp Abs) "abs"))
-
+  <++ (token1 (EUnaryOp Abs) "abs")
+  <++ (token1 (EUnaryOp Det) "det")
+  <++ (token1 (EUnaryOp EigenValue) "eigenvalue")
+  <++ (token1 (EUnaryOp EigenVector) "eigenvector")
+  <++ (token1 (EUnaryOp Solve) "solve"))
+  
 parseMatrix : Parser Exp
 parseMatrix =
   P.recursively <| \_ ->
-    P.map EMatrix <|
+    skipSpaces *>
+    (P.map EMatrix <|
      P.between left_curly right_curly <|
-      P.map A.fromList <| P.separatedBy parseVector comma
+      P.map A.fromList <| P.separatedBy parseVector comma)
 
 parseVector : Parser (Vector Exp)
 parseVector =
   P.recursively <| \_ ->
-    P.between left_curly right_curly <|
-     P.map A.fromList <| P.separatedBy parseExp comma
+    skipSpaces *>
+    (P.between left_curly right_curly <|
+     P.map A.fromList <| P.separatedBy parseExp comma)
 
 parseFun : Parser Exp
 parseFun =
@@ -186,9 +192,11 @@ parseEVar = EVar <$> parseVar
 
 allOps : List String
 allOps =
-  ["pi","e"
+  [ "pi","e"
   ,"sin", "cos", "tan", "arcsin", "arccos", "arctan", "floor","ceiling","round","sqrt","log"
-  , "+","-","*","/"]
+  , "+","-","*","/"
+  , "det","eigenvalue","eigenvector","solve"
+  ]
 
 opStr : String -> Op
 opStr s =
@@ -250,7 +258,13 @@ parseExp = P.recursively <| \_ ->
                 (token1 (EBinaryOp Pow) "^")
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
-        prec4 = P.recursively <| \_ -> parseFun <++ parseEVar <++ parseMatrix <++ parseNum <++ parseConst <++ parens prec0
+        prec4 = P.recursively <| \_ ->
+                parseFun
+                <++ parseEVar
+                <++ parseMatrix
+                <++ parseNum
+                <++ parens prec0
+                --<++ parseConst
    in prec0
 
 parse : String -> Result String Exp
