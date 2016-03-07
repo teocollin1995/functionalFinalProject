@@ -112,7 +112,6 @@ evtMailbox = mailbox (UpModel identity)
 type alias Model =
   { input : String
   , output : String
-  , display : Bool
   }
 
 type Event = UpModel (Model -> Model)
@@ -134,21 +133,15 @@ view model =
                     [ Html.text model.input ]
         in
         let output =
-              if model.display == True then
                 Html.div
                     [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
                     [ Html.text model.output ]
-              else
-                Html.div
-                    [ outputStyle, Attr.contenteditable False, Attr.id "output"]
-                    []
         in
         let btn =
             Html.button
               [ Attr.contenteditable False
               , buttonStyle
               , Events.onMouseDown btnMailbox.address "update"
-              --, Events.onClick btnMailbox.address "update"
               , Events.onMouseUp btnMailbox.address model.output
               ] 
               [ Html.text "See Result" ]
@@ -173,15 +166,13 @@ view model =
      Html.body [ bodyStyle ] [ header, body ]
 
 initModel : Model
-initModel = { input = "", output = "", display = True}
+initModel = { input = "", output = ""}
 
 --- interaction with javascript ---
 
 eventsFromJS : Signal Event 
 eventsFromJS =
-  let foo s =
-        if s == "false" then UpModel <| \model -> { model | display = False }
-        else UpModel <| \model -> { model | input = s, output = "$$" ++ compute s ++ "$$" }
+  let foo s = UpModel <| \model -> { model | input = s, output = "$$" ++ compute s ++ "$$" }
   in
   Signal.map foo signalFromJS
 
