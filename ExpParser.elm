@@ -73,6 +73,12 @@ float =
 -- include the parser for float
 -- expand parseExp to include all Ops
 
+fromOk_ : Result String a -> a
+fromOk_ mx =
+  case mx of
+    Ok a -> a
+    Err s -> Debug.crash <| "fromOk_: " ++ s
+             
 isAlphaNum : Char -> Bool
 isAlphaNum c = Char.isUpper c || Char.isLower c || Char.isDigit c
 
@@ -253,15 +259,25 @@ parse s = P.parse parseExp s
 unparse : Exp -> String
 unparse = prec 0
 
-unparseVec : Vector Exp -> String
-unparseVec v = "{" ++ List.foldr (++) "" (List.intersperse "," <| A.toList <| A.map unparse v) ++ "}"
+matrixRender : String -> String
+matrixRender s = "\\begin{pmatrix}" ++ s ++ "\\end{pmatrix}"
 
+vec : Vector Exp -> String
+vec v = (String.concat <| List.intersperse " & " <| A.toList <| A.map unparse v) ++ "\\\\"
+        
+unparseVec : Vector Exp -> String
+unparseVec = matrixRender << vec
+
+unparseMatrix : Matrix Exp -> String
+unparseMatrix = matrixRender << String.concat << A.toList << A.map vec
+      
 prec i e =
   case e of
     EReal x -> toString x
-    EComplex x -> toString x.re ++ "+" ++ toString x.im ++ "i"
+    EComplex x -> if x.im == 0 then toString x.re
+                  else toString x.re ++ "+" ++ toString x.im ++ "i"
     EVector v -> unparseVec v
-    EMatrix m -> "{" ++ List.foldr (++) "" (List.intersperse "," <| A.toList <| A.map unparseVec m) ++ "}"
+    EMatrix m -> unparseMatrix m
     EUnaryOp op e1 -> strOp op ++ prec 4 e1
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
@@ -279,4 +295,6 @@ paren cutoff prec str =
   if prec > cutoff then "(" ++ str ++ ")"
   else str
   
-test = P.parse parseExp "sin(2+3i)"
+test1 = P.parse parseExp "sin(2+3i)"
+
+test2 = unparseMatrix (A.fromList [A.fromList [EReal 1,EReal 2],A.fromList [EReal 3,EReal 4]])
