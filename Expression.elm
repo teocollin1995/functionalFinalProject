@@ -47,6 +47,7 @@ type Op =
    | Det
    | EigenValue
    | EigenVector
+   | Inv
    | Solve
    -- more to be added
    

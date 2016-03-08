@@ -116,6 +116,9 @@ unparseUOp op =
     EigenVector -> \m -> case L.eigenVectors (convertEMatrix <| unwrapMatrix m) of
                            Just x -> EMatrix <| matrixToExp x
                            _      -> Debug.crash "eigenvector"
+    Inv -> \m -> case L.invert expSpace (unwrapMatrix m) of
+                   Just m1 -> EMatrix m1
+                   _       -> Debug.crash "matrix not invertible"
     _  -> Debug.crash "unParseUOp"
 
 unparseBOp : Op -> Exp -> Exp -> Exp

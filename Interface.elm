@@ -24,7 +24,7 @@ containerStyle =
       basicStyle ++
            [ ("position","relative")
            , ("top", "50pt")
-           , ("left","200pt")
+           , ("left","100pt")
            , ("width","800pt")
            --, ("height", "100%")
            ]
@@ -48,10 +48,10 @@ outputStyle =
   Attr.style <|
       basicStyle ++
              [ ("position","relative")
-             , ("height", "100pt")
-             , ("width","300pt")
+             , ("height", "150pt")
+             , ("width","450pt")
              --, ("top","50pt")
-             --, ("left", "400pt")
+             --, ("left", "-50pt")
              , ("border", "3pt")
              , ("border-style", "solid")
              , ("border-color", "green")

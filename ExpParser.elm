@@ -148,8 +148,9 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp Det) "det")
   <++ (token1 (EUnaryOp EigenValue) "eigenvalue")
   <++ (token1 (EUnaryOp EigenVector) "eigenvector")
-  <++ (token1 (EUnaryOp Solve) "solve"))
-  
+  <++ (token1 (EUnaryOp Solve) "solve")
+  <++ (token1 (EUnaryOp Inv) "inv"))
+
 parseMatrix : Parser Exp
 parseMatrix =
   P.recursively <| \_ ->
@@ -195,7 +196,7 @@ allOps =
   [ "pi","e"
   ,"sin", "cos", "tan", "arcsin", "arccos", "arctan", "floor","ceiling","round","sqrt","log"
   , "+","-","*","/"
-  , "det","eigenvalue","eigenvector","solve"
+  , "det","eigenvalue","eigenvector","inv","solve"
   ]
 
 opStr : String -> Op
