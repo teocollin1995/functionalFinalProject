@@ -103,7 +103,7 @@ parseComplex =
   intOrFloat >>= \a ->
   P.token "+" *>
   skipSpaces  *>
-  intOrFloat >>= \b ->
+  (P.optional intOrFloat 1) >>= \b ->
   P.token "i" *>
   P.succeed (EComplex {re = a, im = b})
 
