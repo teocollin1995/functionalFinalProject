@@ -7,8 +7,6 @@ import ExpParser exposing (parse)
 --numericIntegration
 --plotting 
 
-isInt : Float -> Bool
-isInt x = (toFloat <| round x) == x
 
 --- derivatives ---
 
@@ -75,7 +73,7 @@ chain2 v op e1 e2 =
     Frac -> ((d1 `mult` e1) `minus` (d2 `mult` e1)) `div` (pow e2 2)
     Pow ->
       case e2 of
-        EReal n -> if isInt n then
+        EReal n -> if ExpParser.isInt n then
                      (n `realMult` (pow e1 (n-1))) `mult` d1
                    else Debug.crash "pow"
         _       -> Debug.crash "pow"

@@ -5,6 +5,7 @@ import Maybe exposing (withDefault)
 import Result exposing (toMaybe)
 import String
 import Array as A
+import Complex as C
 
 import Expression exposing (..)
 import OurParser as P exposing (Parser, (*>))
@@ -70,7 +71,6 @@ float =
 
 --TODO:
 -- clean up unnecessary code
--- include the parser for float
 -- expand parseExp to include all Ops
 
 fromOk_ : Result String a -> a
@@ -192,6 +192,14 @@ parseVar =
 parseEVar : Parser Exp
 parseEVar = EVar <$> parseVar
 
+parseDerv : Parser Exp
+parseDerv =
+  skipSpaces *>
+  P.token "d/d" *>
+  parseEVar >>= \var ->
+  parseExp >>=\e ->
+  P.succeed <| EBinaryOp Derv var e
+   
 allOps : List String
 allOps =
   [ "pi","e"
@@ -261,7 +269,8 @@ parseExp = P.recursively <| \_ ->
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ ->
-                parseFun
+                parseDerv
+                <++ parseFun
                 <++ parseEVar
                 <++ parseMatrix
                 <++ parseNum
@@ -289,7 +298,59 @@ unparseMatrix = matrixRender << String.concat << A.toList << A.map vec
 
 unparseVars : List Var -> String
 unparseVars = String.concat << List.intersperse ","
-              
+
+isInt : Float -> Bool
+isInt x = (toFloat <| round x) == x
+          
+toInt : Exp -> Maybe Int
+toInt e =
+  case e of
+    EReal x -> if isInt x then Just <| round x
+               else Nothing
+    EComplex x -> if isInt x.re && x.im == 0 then Just <| round x.re
+                  else Nothing
+    _   -> Nothing
+
+isNum : Exp -> Bool
+isNum e =
+  case e of
+    EReal _ -> True
+    EComplex _ -> True
+    _ -> False
+
+toNum : Exp -> Complex
+toNum e =
+  case e of
+    EReal x -> C.fromReal x
+    EComplex x -> x
+    _  -> Debug.crash "fail to convert: not a number"
+
+simplify : Exp -> Exp
+simplify e =
+  case e of
+    EBinaryOp op e1 e2 ->
+      let res = EBinaryOp op (simplify e1) (simplify e2) in
+      case op of
+        Plus -> case (toInt e1, toInt e2) of
+                  (Just 0, _) -> simplify e2
+                  (_, Just 0) -> simplify e1
+                  _           -> res
+        Minus -> case toInt e2 of
+                   Just 0 -> simplify e1
+                   _      -> res
+        Mult -> case (toInt e1, toInt e2) of
+                  (Just 0, _) -> EReal 0
+                  (_, Just 0) -> EReal 0
+                  (Just 1, _) -> simplify e2
+                  (_, Just 1) -> simplify e1
+                  _           -> res
+        Pow -> case toInt e2 of
+                 Just 0 -> EReal 1
+                 Just 1 -> simplify e1
+                 _      -> res
+        _   -> e
+    _  -> e
+          
 prec i e =
   case e of
     EReal x -> toString x
@@ -301,13 +362,13 @@ prec i e =
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
       case op of
-        Plus -> toPrec 1
+        Plus  -> toPrec 1
         Minus -> toPrec 1
-        Mult -> toPrec 2
-        Frac -> toPrec 2
-        Pow -> toPrec 3
-        Mod -> toPrec 3
-        _   -> Debug.crash "prec: not a binary op"
+        Mult  -> toPrec 2 
+        Frac  -> toPrec 2
+        Pow   -> toPrec 3
+        Mod   -> toPrec 3
+        _     -> Debug.crash "prec: not a binary op"
     EVar x -> x
     EFun name vars e1 -> name ++ unparseVars vars ++ "=" ++ unparse e1
     _ -> Debug.crash <| toString e

@@ -4,6 +4,7 @@ import Expression exposing (..)
 import Complex as C
 import Linear as L
 import Calculus as Ca
+import ExpParser as Parser
 
 import Array as A
 import Result as R
@@ -11,7 +12,7 @@ import Result as R
 (>>=) = R.andThen
         
 eval : Exp -> Result String Exp
-eval e =
+eval e = R.map Parser.simplify <|
   case e of
     EConst const -> Ok <|
       case const of
@@ -59,24 +60,10 @@ realfunc op f e =
     EVar _ -> Ok <| EUnaryOp op e
     EFun _ _ _ -> Ok <| EUnaryOp op e
     _       -> Err <| toString op ++ ": invalid input"
-
-isNum : Exp -> Bool
-isNum e =
-  case e of
-    EReal _ -> True
-    EComplex _ -> True
-    _ -> False
-
-toNum : Exp -> Complex
-toNum e =
-  case e of
-    EReal x -> C.fromReal x
-    EComplex x -> x
-    _  -> Debug.crash "fail to convert: not a number"
           
 convertEVector : Vector Exp -> Vector Complex
 convertEVector v =
-  let foo a acc = if isNum a then A.push (toNum a) acc
+  let foo a acc = if Parser.isNum a then A.push (Parser.toNum a) acc
                   else Debug.crash "fail to convert: not a number"
   in
     A.foldr foo A.empty v
@@ -149,6 +136,10 @@ unparseBOp op =
     Mult -> foo { realFun = (*), complexFun = C.mult, matrixFun = matrixMult }
     Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always <| always dummy }
     Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = always <| always dummy }
+    Derv -> \var e ->
+             case var of
+               EVar x -> eval <| Ca.derivative x e
+               _      -> Debug.crash "derv: impossible"
     _    -> Debug.crash "unparseBOp"
 
 type alias BinaryFunc =
