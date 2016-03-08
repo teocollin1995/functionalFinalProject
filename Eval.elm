@@ -118,10 +118,12 @@ unparseUOp op =
            case e of
              EReal x -> Ok <| EReal <| abs x
              EComplex x -> Ok <| EReal <| C.abs x
-             _   -> Err "abs: invalid input"
+             _   -> Err "abs: invalid input."
     Re  -> bar C.real
     Im  -> bar C.imaginary
-    Det -> Ok << EComplex << L.simpleDet L.complexSpace << convertEMatrix << unwrapMatrix
+    Det -> \m -> case L.simpleDet1 L.complexSpace <| convertEMatrix <| unwrapMatrix m of
+                   Just x -> Ok <| EComplex x
+                   _      -> Err <| "det: invalid input."
     EigenValue -> \m -> case L.eigenValues (convertEMatrix <| unwrapMatrix m) of
                           Just x -> Ok <| EVector <| vectorToExp x
                           _      -> Err "eigenvalue: invalid input"
@@ -170,7 +172,7 @@ genBinaryFunc op f e1 e2 =
     (_, EMatrix _) -> Ok <| EMatrix <| f.matrixFun e1 e2
     _  -> if isFunc e1 || isFunc e2 then Ok <| EBinaryOp op e1 e2
           else Err <| toString op ++ ": invalid input"
-          
+
 type alias NumBinaryFunc =
   { real: Float -> Float -> Float
   , complex : Complex -> Complex -> Complex
