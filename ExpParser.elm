@@ -297,7 +297,7 @@ prec i e =
                   else toString x.re ++ "+" ++ toString x.im ++ "i"
     EVector v -> unparseVec v
     EMatrix m -> unparseMatrix m
-    EUnaryOp op e1 -> strOp op ++ prec 4 e1
+    EUnaryOp op e1 -> strOp op ++ optionalParen (prec 4) e1
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
       case op of
@@ -315,7 +315,15 @@ prec i e =
 paren cutoff prec str =
   if prec > cutoff then "(" ++ str ++ ")"
   else str
-  
+
+optionalParen : (Exp -> String) -> Exp -> String
+optionalParen f e =
+  let paren s = "(" ++ s ++ ")" in
+  case e of
+    EVar _ -> paren (f e)
+    EFun _ _ _ -> paren (f e)
+    _ -> f e
+         
 test1 = P.parse parseExp "sin(2+3i)"
 
 test2 = unparseMatrix (A.fromList [A.fromList [EReal 1,EReal 2],A.fromList [EReal 3,EReal 4]])

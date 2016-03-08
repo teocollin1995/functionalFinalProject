@@ -5,6 +5,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Signal exposing (Mailbox, mailbox)
 import Time
+import Result as R
 
 import Expression exposing (..)
 import ExpParser as Parser
@@ -95,12 +96,20 @@ bodyStyle : Attribute
 bodyStyle =
   Attr.style
       [ ("background-color", "grey") ]
-      
-compute : String -> String
+
+errorStyle : Attribute
+errorStyle =
+  Attr.style
+      [ ("font-size", "20pt")
+      , ("font-family", "Arial Black")
+      , ("color", "red")
+      ]
+  
+compute : String -> Result String String
 compute input =
   case Parser.parse input of
-    Ok exp -> Parser.unparse <| E.eval exp
-    Err s -> Debug.crash s
+    Ok exp -> R.map Parser.unparse <| E.eval exp
+    Err s -> Err <| "parse error: please check your input"
              
 btnMailbox : Mailbox String
 btnMailbox = mailbox ""
@@ -111,7 +120,7 @@ evtMailbox = mailbox (UpModel identity)
 -- add more fields to model if necessary
 type alias Model =
   { input : String
-  , output : String
+  , output : Result String String
   }
 
 type Event = UpModel (Model -> Model)
@@ -123,7 +132,13 @@ upstate event model =
 
 events : Signal Event
 events = Signal.merge evtMailbox.signal eventsFromJS
-         
+
+fromOk : Result String String -> String
+fromOk mx =
+  case mx of
+    Ok s -> s
+    Err s -> s
+             
 view : Model -> Html
 view model =
   let body = 
@@ -133,16 +148,20 @@ view model =
                     [ Html.text model.input ]
         in
         let output =
-                Html.div
-                    [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
-                    [ Html.text model.output ]
+              case model.output of
+                Ok s -> Html.div
+                         [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
+                         [ Html.text s ]
+                Err s -> Html.div
+                          [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
+                          [ Html.strong [ errorStyle ] [ Html.text s]]
         in
         let btn =
             Html.button
               [ Attr.contenteditable False
               , buttonStyle
               , Events.onMouseDown btnMailbox.address "update"
-              , Events.onMouseUp btnMailbox.address model.output
+              , Events.onMouseUp btnMailbox.address (fromOk model.output)
               ] 
               [ Html.text "See Result" ]
         in
@@ -166,13 +185,16 @@ view model =
      Html.body [ bodyStyle ] [ header, body ]
 
 initModel : Model
-initModel = { input = "", output = ""}
+initModel = { input = "", output = Ok ""}
 
 --- interaction with javascript ---
 
 eventsFromJS : Signal Event 
 eventsFromJS =
-  let foo s = UpModel <| \model -> { model | input = s, output = "$$" ++ compute s ++ "$$" }
+  let foo s = UpModel <| \model ->
+              case compute s of
+                Ok s' -> { model | output = Ok <| "$$" ++ s' ++ "$$" }
+                Err s' -> { model | output = Err s'}  
   in
   Signal.map foo signalFromJS
 
