@@ -3,6 +3,7 @@ module Eval where
 import Expression exposing (..)
 import Complex as C
 import Linear as L
+import Calculus as Ca
 
 import Array as A
 
@@ -119,6 +120,10 @@ unparseUOp op =
     Inv -> \m -> case L.invert expSpace (unwrapMatrix m) of
                    Just m1 -> EMatrix m1
                    _       -> Debug.crash "matrix not invertible"
+    Diagonalize -> \m -> case L.diagonalization (convertEMatrix <| unwrapMatrix m) of
+                           Just (m1,m2,m3) -> let foo = L.matrixMult L.complexSpace in
+                                              EMatrix <| matrixToExp ((m1 `foo` m2) `foo` m3)
+                           _               -> Debug.crash "matrix not diagonalizable"
     _  -> Debug.crash "unParseUOp"
 
 unparseBOp : Op -> Exp -> Exp -> Exp

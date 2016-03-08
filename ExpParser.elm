@@ -149,7 +149,8 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp EigenValue) "eigenvalue")
   <++ (token1 (EUnaryOp EigenVector) "eigenvector")
   <++ (token1 (EUnaryOp Solve) "solve")
-  <++ (token1 (EUnaryOp Inv) "inv"))
+  <++ (token1 (EUnaryOp Inv) "inv")
+  <++ (token1 (EUnaryOp Diagonalize) "diagonalize"))
 
 parseMatrix : Parser Exp
 parseMatrix =
@@ -196,7 +197,7 @@ allOps =
   [ "pi","e"
   ,"sin", "cos", "tan", "arcsin", "arccos", "arctan", "floor","ceiling","round","sqrt","log"
   , "+","-","*","/"
-  , "det","eigenvalue","eigenvector","inv","solve"
+  , "det","eigenvalue","eigenvector","inv","solve", "diagonalize"
   ]
 
 opStr : String -> Op
@@ -285,7 +286,10 @@ unparseVec = matrixRender << vec
 
 unparseMatrix : Matrix Exp -> String
 unparseMatrix = matrixRender << String.concat << A.toList << A.map vec
-      
+
+unparseVars : List Var -> String
+unparseVars = String.concat << List.intersperse ","
+              
 prec i e =
   case e of
     EReal x -> toString x
@@ -304,6 +308,8 @@ prec i e =
         Pow -> toPrec 3
         Mod -> toPrec 3
         _   -> Debug.crash "prec: not a binary op"
+    EVar x -> x
+    EFun name vars e1 -> name ++ unparseVars vars ++ "=" ++ unparse e1
     _ -> Debug.crash <| toString e
          
 paren cutoff prec str =

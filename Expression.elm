@@ -48,6 +48,7 @@ type Op =
    | EigenValue
    | EigenVector
    | Inv
+   | Diagonalize
    | Solve
    -- more to be added
    
