@@ -5285,8 +5285,8 @@ Jmat.Matrix.eig = function(m, opt_normalize) {
   var M = Jmat.Matrix;
   if(m.w != m.h || m.w < 1) return null;
   var n = m.w;
-  if(n == 1) return M.eig11(m);
-  if(n == 2) return M.eig22(m);
+//  if(n == 1) return M.eig11(m);
+//  if(n == 2) return M.eig22(m);
 
   if(M.isReal(m) && M.isSymmetric(m)) return Jmat.Matrix.jacobi_(m, opt_normalize);
 
@@ -5295,7 +5295,7 @@ Jmat.Matrix.eig = function(m, opt_normalize) {
 
   // Fullfill our promise of eigenvalues sorted from largest to smallest magnitude, the eigenvalue algorithm usually has them somewhat but not fully correctly sorted
   l.sort(function(a, b) { return b.abssq() - a.abssq(); });
-    for(var i = 0; i < l.length; i++) if(Jmat.Complex.nearr(l[i], 0, 1e-15)) l[i] = Jmat.Complex(0); // this avoids numerical instability problems with calculation of eigenvectors in case of eigenvalues that should be zero, but are close to it instead
+  //  for(var i = 0; i < l.length; i++) if(Jmat.Complex.nearr(l[i], 0, 1e-15)) l[i] = Jmat.Complex(0); // this avoids numerical instability problems with calculation of eigenvectors in case of eigenvalues that should be zero, but are close to it instead
   var v = null;
   // TODO: use more efficient algorithm for eigenvectors, e.g. something that produces them as side-effect of the eigenvalue calculation
   // TODO: for hermitian or symmetric matrix, use faster algorithm for eigenvectors
