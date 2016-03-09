@@ -80,3 +80,21 @@ chain2 v op e1 e2 =
     -- add more binary operators
     _ -> Debug.crash "chain2"
     
+
+--numeric stuff
+--f x h 
+--higher order diffence qout
+--trapzoid
+symetricDiffrenceQout : (Float -> Float) -> Float -> Float -> Float
+symetricDiffrenceQout f x h = 
+  if h == 0 then Debug.crash "Can't divide by 0"
+  else
+    (f (x+h) - f (x-h))/(2*h)
+
+
+stencil : (Float -> Float) -> Float -> Float -> Float
+stencil f x h = 
+  if h == 0 then Debug.crash "Can't divide by 0 "
+  else 
+    ((-1) * f (x+2*h) + 8 * f (x+h) - 8*f(x - h) + f(x-2*h)) / (12 * h)
+
