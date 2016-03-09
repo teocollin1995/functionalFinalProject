@@ -5,6 +5,7 @@ import Maybe exposing (withDefault)
 import Result exposing (toMaybe)
 import String
 import Array as A
+import Complex as C
 
 import Expression exposing (..)
 import OurParser as P exposing (Parser, (*>))
@@ -70,7 +71,6 @@ float =
 
 --TODO:
 -- clean up unnecessary code
--- include the parser for float
 -- expand parseExp to include all Ops
 
 fromOk_ : Result String a -> a
@@ -96,14 +96,19 @@ token1 val str = skipSpaces *> (always val <$> P.token str)
 
 parseReal : Parser Exp
 parseReal = skipSpaces *> (EReal <$> intOrFloat)
-            
+
+realpart : Parser Float
+realpart =
+  intOrFloat >>= \a ->
+  P.token "+" *>
+  P.succeed a
+   
 parseComplex : Parser Exp
 parseComplex =
   skipSpaces *>
-  intOrFloat >>= \a ->
-  P.token "+" *>
+  P.optional realpart 0 >>= \a ->
   skipSpaces  *>
-  intOrFloat >>= \b ->
+  (P.optional intOrFloat 1) >>= \b ->
   P.token "i" *>
   P.succeed (EComplex {re = a, im = b})
 
@@ -148,8 +153,10 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp Det) "det")
   <++ (token1 (EUnaryOp EigenValue) "eigenvalue")
   <++ (token1 (EUnaryOp EigenVector) "eigenvector")
-  <++ (token1 (EUnaryOp Solve) "solve"))
-  
+  <++ (token1 (EUnaryOp Solve) "solve")
+  <++ (token1 (EUnaryOp Inv) "inv")
+  <++ (token1 (EUnaryOp Diagonalize) "diagonalize"))
+
 parseMatrix : Parser Exp
 parseMatrix =
   P.recursively <| \_ ->
@@ -190,12 +197,20 @@ parseVar =
 parseEVar : Parser Exp
 parseEVar = EVar <$> parseVar
 
+parseDerv : Parser Exp
+parseDerv =
+  skipSpaces *>
+  P.token "d/d" *>
+  parseEVar >>= \var ->
+  parseExp >>=\e ->
+  P.succeed <| EBinaryOp Derv var e
+   
 allOps : List String
 allOps =
   [ "pi","e"
   ,"sin", "cos", "tan", "arcsin", "arccos", "arctan", "floor","ceiling","round","sqrt","log"
   , "+","-","*","/"
-  , "det","eigenvalue","eigenvector","solve"
+  , "det","eigenvalue","eigenvector","inv","solve", "diagonalize"
   ]
 
 opStr : String -> Op
@@ -259,10 +274,11 @@ parseExp = P.recursively <| \_ ->
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ ->
-                parseFun
+                parseDerv
+                <++ parseNum
+                <++ parseFun
                 <++ parseEVar
                 <++ parseMatrix
-                <++ parseNum
                 <++ parens prec0
                 --<++ parseConst
    in prec0
@@ -284,31 +300,112 @@ unparseVec = matrixRender << vec
 
 unparseMatrix : Matrix Exp -> String
 unparseMatrix = matrixRender << String.concat << A.toList << A.map vec
-      
+
+unparseVars : List Var -> String
+unparseVars = String.concat << List.intersperse ","
+
+isInt : Float -> Bool
+isInt x = (toFloat <| round x) == x
+          
+toInt : Exp -> Maybe Int
+toInt e =
+  case e of
+    EReal x -> if isInt x then Just <| round x
+               else Nothing
+    EComplex x -> if isInt x.re && x.im == 0 then Just <| round x.re
+                  else Nothing
+    _   -> Nothing
+
+isNum : Exp -> Bool
+isNum e =
+  case e of
+    EReal _ -> True
+    EComplex _ -> True
+    _ -> False
+
+toNum : Exp -> Complex
+toNum e =
+  case e of
+    EReal x -> C.fromReal x
+    EComplex x -> x
+    _  -> Debug.crash "fail to convert: not a number"
+
+simplify : Exp -> Exp
+simplify e =
+  case e of
+    EBinaryOp op e1 e2 ->
+      let res = EBinaryOp op (simplify e1) (simplify e2) in
+      case op of
+        Plus -> case (toInt e1, toInt e2) of
+                  (Just 0, _) -> simplify e2
+                  (_, Just 0) -> simplify e1
+                  _           -> res
+        Minus -> case toInt e2 of
+                   Just 0 -> simplify e1
+                   _      -> res
+        Mult -> case (toInt e1, toInt e2) of
+                  (Just 0, _) -> EReal 0
+                  (_, Just 0) -> EReal 0
+                  (Just 1, _) -> simplify e2
+                  (_, Just 1) -> simplify e1
+                  _           -> res
+        Pow -> case toInt e2 of
+                 Just 0 -> EReal 1
+                 Just 1 -> simplify e1
+                 _      -> res
+        _   -> e
+    _  -> e
+          
 prec i e =
   case e of
     EReal x -> toString x
     EComplex x -> if x.im == 0 then toString x.re
+                  else if x.re == 0 then toString x.im ++ "i"
                   else toString x.re ++ "+" ++ toString x.im ++ "i"
     EVector v -> unparseVec v
     EMatrix m -> unparseMatrix m
-    EUnaryOp op e1 -> strOp op ++ prec 4 e1
+    EUnaryOp op e1 -> strOp op ++ optionalParen (prec 4) e1
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
       case op of
-        Plus -> toPrec 1
+        Plus  -> toPrec 1
         Minus -> toPrec 1
-        Mult -> toPrec 2
-        Frac -> toPrec 2
-        Pow -> toPrec 3
-        Mod -> toPrec 3
-        _   -> Debug.crash "prec: not a binary op"
+        Mult  -> toPrec 2 
+        Frac  -> toPrec 2
+        Pow   -> toPrec 3
+        Mod   -> toPrec 3
+        _     -> Debug.crash "prec: not a binary op"
+    EVar x -> x
+    EFun name vars e1 -> name ++ unparseVars vars ++ "=" ++ unparse e1
+    EAnnot ann e1 -> unwrapAnnotation ann e1
     _ -> Debug.crash <| toString e
          
 paren cutoff prec str =
   if prec > cutoff then "(" ++ str ++ ")"
   else str
-  
-test1 = P.parse parseExp "sin(2+3i)"
 
-test2 = unparseMatrix (A.fromList [A.fromList [EReal 1,EReal 2],A.fromList [EReal 3,EReal 4]])
+optionalParen : (Exp -> String) -> Exp -> String
+optionalParen f e =
+  let paren s = "(" ++ s ++ ")" in
+  case e of
+    EVar _ -> paren (f e)
+    EFun _ _ _ -> paren (f e)
+    _ -> f e
+
+unwrapAnnotation : String -> Exp -> String
+unwrapAnnotation ann e =
+  let bar a acc = if acc == "" then a else a ++ "\\\\" ++ acc in
+  case ann of
+    "eigenvalue" ->
+      case e of
+        EVector v ->
+          let foo n a = "\\lambda_" ++ toString n ++ " = " ++ unparse a in
+          A.foldr bar "" <| A.indexedMap foo v
+        _ -> Debug.crash "impossible"
+    "eigenvector" ->
+      case e of
+        EMatrix m ->
+          let foo n v = "v_" ++ toString n ++ " = " ++ unparseVec v in
+          A.foldr bar "" <| A.indexedMap foo m
+        _ -> Debug.crash "impossible"
+    _  -> Debug.crash "annotation not supported"

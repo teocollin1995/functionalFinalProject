@@ -3,24 +3,31 @@ module Eval where
 import Expression exposing (..)
 import Complex as C
 import Linear as L
+import Calculus as Ca
+import ExpParser as Parser
 
 import Array as A
+import Result as R
 
-eval : Exp -> Exp
-eval e =
+(>>=) = R.andThen
+        
+eval : Exp -> Result String Exp
+eval e = R.map Parser.simplify <|
   case e of
-    EConst const ->
+    EConst const -> Ok <|
       case const of
         Pi -> EReal pi
         E  -> EReal Basics.e
         _  -> Debug.crash <| "eval: impossible"
     EUnaryOp op e ->
-      let f = unparseUOp op in f (eval e)
+      let f = unparseUOp op in (eval e) >>= f
     EBinaryOp op e1 e2 ->
       let f = unparseBOp op in
       let (res1, res2) = (eval e1, eval e2) in
-      f res1 res2
-    _ -> e
+      res1 >>= \e1 ->
+        res2 >>= \e2 ->
+          f e1 e2
+    _ -> Ok e
 
 type alias UnaryFunc =
    { realFun : Real -> Real
@@ -29,42 +36,34 @@ type alias UnaryFunc =
    --, complexToReal : Complex -> Real
    }
                      
-genUnaryFunc : Op -> UnaryFunc -> Exp -> Exp
+genUnaryFunc : Op -> UnaryFunc -> Exp -> Result String Exp
 genUnaryFunc op f e =
   case e of
-    EReal x -> EReal <| f.realFun x
-    EComplex x -> EComplex <| f.complexFun x  
-    _  -> Debug.crash <| toString op
+    EReal x -> Ok <| EReal <| f.realFun x
+    EComplex x -> Ok <| EComplex <| f.complexFun x
+    EVar _ -> Ok <| EUnaryOp op e
+    EFun _ _ _ -> Ok <| EUnaryOp op e
+    _  -> Err <| toString op ++ ": invalid input"
           
-toRealfunc : Op -> (Complex -> Real) -> Exp -> Exp
+toRealfunc : Op -> (Complex -> Real) -> Exp -> Result String Exp
 toRealfunc op f e =
   case e of
-    EComplex x -> EReal <| f x
-    _          -> Debug.crash <| toString op
+    EComplex x -> Ok <| EReal <| f x
+    EVar _ -> Ok <| EUnaryOp op e
+    EFun _ _ _ -> Ok <| EUnaryOp op e
+    _          -> Err <| toString op ++ ": invalid input"
 
-realfunc : Op -> (Real -> Real) -> Exp -> Exp
+realfunc : Op -> (Real -> Real) -> Exp -> Result String Exp
 realfunc op f e =
   case e of
-    EReal x -> EReal <| f x
-    _       -> Debug.crash <| toString op
-
-isNum : Exp -> Bool
-isNum e =
-  case e of
-    EReal _ -> True
-    EComplex _ -> True
-    _ -> False
-
-toNum : Exp -> Complex
-toNum e =
-  case e of
-    EReal x -> C.fromReal x
-    EComplex x -> x
-    _  -> Debug.crash "fail to convert: not a number"
+    EReal x -> Ok <| EReal <| f x
+    EVar _ -> Ok <| EUnaryOp op e
+    EFun _ _ _ -> Ok <| EUnaryOp op e
+    _       -> Err <| toString op ++ ": invalid input"
           
 convertEVector : Vector Exp -> Vector Complex
 convertEVector v =
-  let foo a acc = if isNum a then A.push (toNum a) acc
+  let foo a acc = if Parser.isNum a then A.push (Parser.toNum a) acc
                   else Debug.crash "fail to convert: not a number"
   in
     A.foldr foo A.empty v
@@ -85,7 +84,7 @@ unwrapMatrix m =
     EMatrix m' -> m'
     _          -> Debug.crash "not a matrix"
                   
-unparseUOp : Op -> Exp -> Exp
+unparseUOp : Op -> Exp -> Result String Exp
 unparseUOp op =
   let foo = genUnaryFunc op in
   let bar = toRealfunc op in
@@ -104,21 +103,30 @@ unparseUOp op =
     Log -> foo { realFun = logBase 10, complexFun = flip C.ln 0 } -- also this
     Abs -> \e ->
            case e of
-             EReal x -> EReal <| abs x
-             EComplex x -> EReal <| C.abs x
-             _   -> Debug.crash "abs"
+             EReal x -> Ok <| EReal <| abs x
+             EComplex x -> Ok <| EReal <| C.abs x
+             _   -> Err "abs: invalid input."
     Re  -> bar C.real
     Im  -> bar C.imaginary
-    Det -> EComplex << L.simpleDet L.complexSpace << convertEMatrix << unwrapMatrix
+    Det -> \m -> case L.simpleDet1 L.complexSpace <| convertEMatrix <| unwrapMatrix m of
+                   Just x -> Ok <| EComplex x
+                   _      -> Err <| "det: invalid input."
     EigenValue -> \m -> case L.eigenValues (convertEMatrix <| unwrapMatrix m) of
-                          Just x -> EVector <| vectorToExp x
-                          _      -> Debug.crash "eigenvalue"
+                          Just x -> Ok <| EAnnot "eigenvalue" <| EVector <| vectorToExp x
+                          _      -> Err "eigenvalue: invalid input"
     EigenVector -> \m -> case L.eigenVectors (convertEMatrix <| unwrapMatrix m) of
-                           Just x -> EMatrix <| matrixToExp x
-                           _      -> Debug.crash "eigenvector"
+                           Just x -> Ok <| EAnnot "eigenvector" <| EMatrix <| matrixToExp x
+                           _      -> Err "eigenvector: invalid input"
+    Inv -> \m -> case L.invert expSpace (unwrapMatrix m) of
+                   Just m1 -> Ok <| EMatrix m1
+                   _       -> Err "inverse: matrix not invertible"
+    Diagonalize -> \m -> case L.diagonalization (convertEMatrix <| unwrapMatrix m) of
+                           Just (m1,m2,m3) -> let foo = L.matrixMult L.complexSpace in
+                                              Ok <| EMatrix <| matrixToExp ((m1 `foo` m2) `foo` m3)
+                           _               -> Err "matrix not diagonalizable"
     _  -> Debug.crash "unParseUOp"
 
-unparseBOp : Op -> Exp -> Exp -> Exp
+unparseBOp : Op -> Exp -> Exp -> Result String Exp
 unparseBOp op =
   let foo = genBinaryFunc op in
   let dummy = L.identity expSpace 0 in
@@ -128,6 +136,10 @@ unparseBOp op =
     Mult -> foo { realFun = (*), complexFun = C.mult, matrixFun = matrixMult }
     Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always <| always dummy }
     Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = always <| always dummy }
+    Derv -> \var e ->
+             case var of
+               EVar x -> eval <| Ca.derivative x e
+               _      -> Debug.crash "derv: impossible"
     _    -> Debug.crash "unparseBOp"
 
 type alias BinaryFunc =
@@ -136,14 +148,21 @@ type alias BinaryFunc =
   , matrixFun : Exp -> Exp -> Matrix Exp
   }
                 
-genBinaryFunc : Op -> BinaryFunc -> Exp -> Exp ->  Exp
+genBinaryFunc : Op -> BinaryFunc -> Exp -> Exp -> Result String Exp
 genBinaryFunc op f e1 e2 =
   case (e1, e2) of
-    (EReal x, EReal y) -> EReal <| f.realFun x y
-    (EReal x, EComplex y) -> EComplex <| f.complexFun (C.fromReal x) y
-    (EComplex x, EReal y) -> EComplex <| f.complexFun x (C.fromReal y)
-    (EComplex x, EComplex y) -> EComplex <| f.complexFun x y
-    _   -> EMatrix <| f.matrixFun e1 e2
+    (EReal x, EReal y) -> Ok <| EReal <| f.realFun x y
+    (EReal x, EComplex y) -> Ok <| EComplex <| f.complexFun (C.fromReal x) y
+    (EComplex x, EReal y) -> Ok <| EComplex <| f.complexFun x (C.fromReal y)
+    (EComplex x, EComplex y) -> Ok <| EComplex <| f.complexFun x y
+    (EVar _, _) -> Ok <| EBinaryOp op e1 e2
+    (_, EVar _) -> Ok <| EBinaryOp op e1 e2
+    (EFun _ _ _, _) -> Ok <| EBinaryOp op e1 e2
+    (_, EFun _ _ _) -> Ok <| EBinaryOp op e1 e2
+    (EMatrix _, _) -> Ok <| EMatrix <| f.matrixFun e1 e2
+    (_, EMatrix _) -> Ok <| EMatrix <| f.matrixFun e1 e2
+    _  -> if isFunc e1 || isFunc e2 then Ok <| EBinaryOp op e1 e2
+          else Err <| toString op ++ ": invalid input"
 
 type alias NumBinaryFunc =
   { real: Float -> Float -> Float
@@ -197,3 +216,12 @@ matrixMinus e1 e2 =
   case (e1, e2) of
     (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.sub m1 m2
     _ -> Debug.crash "matrixMinus"
+
+isFunc : Exp -> Bool
+isFunc e =
+  case e of
+    EVar _ -> True
+    EFun _ _ _ -> True
+    EUnaryOp _ e1 -> isFunc e1
+    EBinaryOp _ e1 e2 -> isFunc e1 || isFunc e2
+    _ -> False

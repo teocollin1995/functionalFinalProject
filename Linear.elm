@@ -11,7 +11,7 @@ module Linear
   submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors,
   transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,
    elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector, matrixMult,
-    invert, invertable, trace, diagProd, simpleDet,
+    invert, invertable, trace, diagProd, simpleDet, simpleDet1,
     eigenValues, eigenVectors,diagonalization,eigen) where 
 
 {-| The Linear module provides a variety of tools from Linear Algebra. Matrix and Vector are defined in expression, but tools for manipulating them (e.g. though maps, dot products, norms, row operations, determiants, eigen values, and what not) are stored here. 
@@ -59,7 +59,7 @@ Note that for all functions take rows and cols, the rows are alwalys given first
 @docs elementWise, vectorMap2, dotProd,matrixMult
 
 # Matrix properties
-@docs  invert, invertable, trace, diagProd, simpleDet
+@docs  invert, invertable, trace, diagProd, simpleDet, simpleDet1
 
 # Numerical Linear Algebra 
 @docs eigenValues, eigenVectors,diagonalization,eigen
@@ -1029,8 +1029,13 @@ simpleDet space m =
            in
              Array.foldr folder (space.fromReal 0) (minors m)
 
+{-| a wrapper that prevents the program from crashing -}
 
-
+simpleDet1 : Space a -> Matrix a -> Maybe a
+simpleDet1 space m =
+  let (rows, cols) = (dimM m) in
+  if rows == 0 || rows /= cols then Nothing
+  else Just <| simpleDet space m
 
 --wolframalpha output of a matirx
 --complex number printer
