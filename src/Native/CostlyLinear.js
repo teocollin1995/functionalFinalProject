@@ -9869,6 +9869,44 @@ var eig2 = function(cmatrix){
     
 };
 
+// //copied from: -https://stackoverflow.com/questions/247483/http-get-request-in-javascript
+// function httpGetAsync(theUrl, callback)
+// {
+//     var xmlHttp = new XMLHttpRequest();
+//     xmlHttp.onreadystatechange = function() { 
+//         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+//             callback(xmlHttp.responseText);
+//     }
+//     xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+//     xmlHttp.send(null);
+// };
+// //https://stackoverflow.com/questions/9922101/get-json-data-from-external-url-and-display-it-in-a-div-as-plain-text
+// var getJSON = function(url) {
+//   return new Promise(function(resolve, reject) {
+//     var xhr = new XMLHttpRequest();
+//     xhr.open('get', url, true);
+//     xhr.responseType = 'json';
+//     xhr.onload = function() {
+//       var status = xhr.status;
+//       if (status == 200) {
+//         resolve(xhr.response);
+//       } else {
+//         reject(status);
+//       }
+//     };
+//     xhr.send();
+//   });
+// };
+
+// var eigenvalues = function(url){
+
+//     getJSON(url).then(function(data)){
+//         return(data.result)
+//     }
+// };
+
+
+
 // make is a function that takes an instance of the 
 // elm runtime 
 // returns an object where:
