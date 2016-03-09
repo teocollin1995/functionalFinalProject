@@ -2,8 +2,6 @@ module Calculus where
 
 import Expression exposing (..)
 import ExpParser exposing (parse)
---symbolicDifferentiation
---numericDifferentiation
 --numericIntegration
 --plotting 
 
@@ -82,12 +80,12 @@ chain2 v op e1 e2 =
     
 
 --numeric stuff
---f x h 
 --higher order diffence qout
---trapzoid
+--should implement checks for h == 0 and what not
 
 ---
 epsilon = 0.0000000000001
+interationMax = 50000
 --numeric diff stuff -> WILL NOT WORK IF THE DERIVATIVE DOES NOT EXIST!
 symetricDiffrenceQout : (Float -> Float) -> Float -> Float -> Float
 symetricDiffrenceQout f x h = 
@@ -102,14 +100,15 @@ stencil f x h =
   else 
     ((-1) * f (x+2*h) + 8 * f (x+h) - 8*f(x - h) + f(x-2*h)) / (12 * h)
 
-numDiff : (Float -> Float) -> Float -> Float -> Float -> Float
-numDiff f ff x h =
+numDiff : (Float -> Float) -> Float -> Float -> Float -> Int ->  Float
+numDiff f ff x h n =
   let 
     ff' = symetricDiffrenceQout f x (h / 5)
   in
     if abs (ff - ff') < epsilon 
     then ff' 
-    else numDiff f ff' x (h / 5)
+    else if n > interationMax then ff'
+    else numDiff f ff' x (h / 5) (n+1)
   
 -- numDiff' f ff x h =
 --   let 
@@ -121,5 +120,58 @@ numDiff f ff x h =
 
 
 numericDiff : (Float -> Float) -> Float -> Float
-numericDiff f x = numDiff f 100000000000000000 x (0.1)
+numericDiff f x = numDiff f 100000000000000000 x (0.1) 0
       
+
+
+
+
+type alias Partitions = List (Float,Float)
+
+genPartitions : Int -> Float -> Float -> Partitions
+genPartitions n a b = 
+  let
+    delta = (b-a)/(toFloat n)
+    interval n = (a+delta*n,a+delta*(n+1))
+  in
+    List.map interval [0..((toFloat n)-1)]
+
+
+splitPartitions : Int -> Partitions -> Partitions
+splitPartitions n p = List.concatMap ( \(a,b) -> genPartitions n a b) p
+    
+
+integralApproximation :  (Float -> Float) -> ((Float -> Float) -> Partitions -> Float ) -> Partitions -> Float -> Int -> Float
+integralApproximation f app p s n = 
+  let
+    newPartitions = splitPartitions 6 p 
+    newSum = app f newPartitions
+  in
+    if abs (newSum - s) < 0.000001 then newSum --we don't have enough memory in elm to be that picky... we could optimize but there is crap to do
+    else if n > interationMax then newSum
+    else integralApproximation f app newPartitions newSum (n+1)
+
+trapzoid : (Float -> Float) -> (Float, Float) -> Float
+trapzoid f (a,b) = (b-a) * ((f a) + (f b)) /2 
+
+trapzoidSum : (Float -> Float) -> Partitions -> Float 
+trapzoidSum f p = List.foldr (+) 0 (List.map (\ i -> trapzoid f i) p)
+
+--most    
+trapazoidIntegral : (Float -> Float) -> (Float, Float) -> Float
+trapazoidIntegral f (a,b) = integralApproximation f trapzoidSum (splitPartitions 6 [(a,b)]) 10000000000000 0 
+
+
+simpson : (Float -> Float) -> (Float, Float) -> Float
+simpson f (a,b) = ((b-a)/6) * (f a + 4 * f (( a+ b)/2) + f b)
+
+simpsonSum : (Float -> Float) -> Partitions -> Float 
+simpsonSum f p =  List.foldr (+) 0 (List.map (\ i -> simpson f i) p)
+
+--better if some derivative exists?
+simpsonIntegral : (Float -> Float) -> (Float, Float) -> Float
+simpsonIntegral f (a,b) = integralApproximation f simpsonSum (splitPartitions 6 [(a,b)]) 10000000000000 0
+
+
+--if we want something faster we could look at: https://en.wikipedia.org/wiki/Romberg%27s_method
+
