@@ -59,3 +59,4 @@ testInverse m ci = 1 == (Native.CostlyLinear.test_inverse (Array.toList (Array.m
                
                  
 
+--http://localhost:8080/eigen/%22[['0+0j','1+0j'],['0+0j','1+1j']]%22
