@@ -112,10 +112,10 @@ unparseUOp op =
                    Just x -> Ok <| EComplex x
                    _      -> Err <| "det: invalid input."
     EigenValue -> \m -> case L.eigenValues (convertEMatrix <| unwrapMatrix m) of
-                          Just x -> Ok <| EVector <| vectorToExp x
+                          Just x -> Ok <| EAnnot "eigenvalue" <| EVector <| vectorToExp x
                           _      -> Err "eigenvalue: invalid input"
     EigenVector -> \m -> case L.eigenVectors (convertEMatrix <| unwrapMatrix m) of
-                           Just x -> Ok <| EMatrix <| matrixToExp x
+                           Just x -> Ok <| EAnnot "eigenvector" <| EMatrix <| matrixToExp x
                            _      -> Err "eigenvector: invalid input"
     Inv -> \m -> case L.invert expSpace (unwrapMatrix m) of
                    Just m1 -> Ok <| EMatrix m1

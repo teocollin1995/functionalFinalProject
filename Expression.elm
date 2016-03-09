@@ -15,7 +15,8 @@ type Exp =
   | EMatrix (Matrix Exp)
   | EVector (Vector Exp)
   | EFun Name (List Var) Exp -- for example f(x,y) = x^2 + y^2
-
+  | EAnnot String Exp --stuff some information for unparsing
+    
 type alias Var = String
 type alias Name = String
                 

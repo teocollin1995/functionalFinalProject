@@ -377,6 +377,7 @@ prec i e =
         _     -> Debug.crash "prec: not a binary op"
     EVar x -> x
     EFun name vars e1 -> name ++ unparseVars vars ++ "=" ++ unparse e1
+    EAnnot ann e1 -> unwrapAnnotation ann e1
     _ -> Debug.crash <| toString e
          
 paren cutoff prec str =
@@ -390,7 +391,21 @@ optionalParen f e =
     EVar _ -> paren (f e)
     EFun _ _ _ -> paren (f e)
     _ -> f e
-         
-test1 = P.parse parseExp "sin(2+3i)"
 
-test2 = unparseMatrix (A.fromList [A.fromList [EReal 1,EReal 2],A.fromList [EReal 3,EReal 4]])
+unwrapAnnotation : String -> Exp -> String
+unwrapAnnotation ann e =
+  let bar a acc = if acc == "" then a else a ++ "\\\\" ++ acc in
+  case ann of
+    "eigenvalue" ->
+      case e of
+        EVector v ->
+          let foo n a = "\\lambda_" ++ toString n ++ " = " ++ unparse a in
+          A.foldr bar "" <| A.indexedMap foo v
+        _ -> Debug.crash "impossible"
+    "eigenvector" ->
+      case e of
+        EMatrix m ->
+          let foo n v = "v_" ++ toString n ++ " = " ++ unparseVec v in
+          A.foldr bar "" <| A.indexedMap foo m
+        _ -> Debug.crash "impossible"
+    _  -> Debug.crash "annotation not supported"
