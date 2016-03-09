@@ -69,7 +69,7 @@ graphicOutputStyle =
   Attr.style <|
       basicStyle ++
         [ ("position", "absolute")
-        , ("height", "250pt")
+        , ("height", "270pt")
         , ("width", "300pt")
         , ("top","60pt")
         , ("right", "0pt")
@@ -104,8 +104,19 @@ captionStyle =
 captionStyle1 : Attribute
 captionStyle1 =
   Attr.style
-      [ ("font-size", "24pt")
-      , ("font-family", "Courier")
+      [ ("font-size", "20pt")
+      , ("font-family", "Palatino Linotype")
+      , ("color", "black")
+      ]
+
+captionStyle2 : Attribute
+captionStyle2 =
+  Attr.style
+      [ ("position","absolute")
+      , ("right", "180pt")
+      , ("top","35pt")
+      , ("font-size", "20pt")
+      , ("font-family", "Palatino Linotype")
       , ("color", "black")
       ]
   
@@ -126,8 +137,10 @@ dropDownStyle : Attribute
 dropDownStyle =
   Attr.style
       [ ("position","absolute")
+      , ("top", "-40pt")
       , ("right", "50pt")
       , ("width", "200pt")
+      , ("height", "40pt")
       , ("font-size", "20pt")
       , ("font-family", "Book Antiqua")
       ]
@@ -166,8 +179,8 @@ events = Signal.merge evtMailbox.signal eventsFromJS
 updateGraphic : String -> (Maybe String, Maybe GE.Element)
 updateGraphic input =
   case Parser.parse input of
-    Ok e -> (Nothing, Just <| G.plot (-1,1) 100 e)
-    Err s -> (Just s, Nothing)
+    Ok e -> (Nothing, Just <| G.plot (-1,1) 150 e)
+    Err s -> (Just "parse error: Please check your input", Nothing)
              
 fromOk : Result String String -> String
 fromOk mx =
@@ -223,7 +236,7 @@ view model =
                          [ Html.text s ]
                 Err s -> Html.div
                           [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
-                          [ Html.strong [ errorStyle ] [ Html.text s]]
+                          [ Html.text s]
         in
         let graphicOutput =
                case model.graphic of
@@ -231,7 +244,7 @@ view model =
                                  [ graphicOutputStyle, Attr.id "graphicOutput" ]
                                  [ Html.fromElement graph ]
                 _          ->  Html.div [ graphicOutputStyle, Attr.id "graphicOutput" ] []
-        in              
+        in
         let computeBtn =
             Html.button
               [ Attr.contenteditable False
@@ -256,7 +269,7 @@ view model =
                           , ("padding", "10pt 24pt")
                           ]
                   , Events.onClick evtMailbox.address <| UpModel <| \model ->
-                    { model | input = "", output = Ok ""}
+                    { model | input = "", output = Ok "", graphic = Nothing}
                   -- , Events.onMouseUp btnMailbox.address "clear"
                   ]
                   [ Html.text "Clear" ]
@@ -270,11 +283,7 @@ view model =
                           , ("background-color","#73B76D")
                           , ("padding", "10pt 29pt")
                           ]
-                  , Events.onMouseDown btnMailbox.address "update"
-                  , Events.onMouseUp evtMailbox.address <| UpModel <| \model ->
-                    case updateGraphic model.input of
-                      (Nothing, g) -> { model | graphic = g }
-                      (Just s, _) -> { model | output = Err s, graphic = Nothing }
+                  , Events.onClick btnMailbox.address "graphicUpdate"
                   ]
                   [ Html.text "Plot" ]
         in
@@ -284,9 +293,12 @@ view model =
         let outputCaption =
               Html.span [ captionStyle1 ] [ Html.text "Output"]
         in
+        let graphicCaption =
+              Html.span [ captionStyle2 ] [ Html.text "Graphic Output" ]
+        in
         Html.div
           [ containerStyle ]
-          [ inputCaption, example, br, input, computeBtn, clearBtn, plotBtn, graphicOutput, br, br, outputCaption, output ]
+          [ inputCaption, example, br, input, computeBtn, clearBtn, plotBtn, graphicCaption, graphicOutput, br, br, br, outputCaption, output ]
   in
   let header =
      let caption =
@@ -303,14 +315,21 @@ initModel = { input = "", output = Ok "", graphic = Nothing}
 
 eventsFromJS : Signal Event 
 eventsFromJS =
-  let foo s = UpModel <| \model ->
-              case compute s of
-                Ok s' -> { model | input = s, output = Ok <| "$$" ++ s' ++ "$$" }
-                Err s' -> { model | input = s, output = Err s'}  
+  let foo (info, s) =
+        case info of
+          "update" -> UpModel <| \model ->
+                        case compute s of
+                          Ok s' -> { model | input = s, output = Ok <| "$$" ++ s' ++ "$$" }
+                          Err s' -> { model | input = s, output = Err s'}
+          "graphicUpdate" -> UpModel <| \model ->
+                               case updateGraphic s of
+                                 (Nothing, g) -> { model | input = s, graphic = g }
+                                 (Just s', _) -> { model | input = s, output = Err s', graphic = Nothing }
+          _ -> Debug.crash "signalFromJS"
   in
   Signal.map foo signalFromJS
 
-port signalFromJS : Signal String
+port signalFromJS : Signal (String, String)
                     
 port signalToJS : Signal String
 port signalToJS = btnMailbox.signal

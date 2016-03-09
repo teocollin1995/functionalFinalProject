@@ -36,7 +36,8 @@ calculus3 = "d/dx (sin(x) + cos(y))"
 
 examples : List (String, String)
 examples =
-  [ ("number: add", basic1)
+  [ ("examples","")
+  , ("number: add", basic1)
   , ("number: div", basic2)
   , ("number: parens" , basic3)
   , ("function: sin", function1)

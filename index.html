@@ -24,17 +24,20 @@
       window.initializers      = [];
     </script>
     <script>
-    window.initialPortValues["signalFromJS"] = "DUMMY";
+    window.initialPortValues["signalFromJS"] = ["update","DUMMY"];
 
     window.initializers.push(function (elmRuntime) {
 	elmRuntime.ports.signalToJS.subscribe(function (info) {
-	    if (info == "update") {
+	    if (info == "update" || info == "graphicUpdate") {
 		var s = window.document.getElementById("input").textContent;
                 console.log(s);
-                elmRuntime.ports.signalFromJS.send(s);
+                elmRuntime.ports.signalFromJS.send([info,s]);
 	    }
             else if (info == "clear") {
-                removeAll(window.document.getElementById("output"));
+                var input_node = window.document.getElementById("input");
+                input_node.textContent = "";
+                var output_node = window.document.getElementById("output");
+                //output_node.textContent = "";
             }
 		else {
 		    console.log(info);
@@ -68,8 +71,8 @@
 
       // Call the initializers
       for (var i in window.initializers) {
-        var intializer = window.initializers[i];
-        intializer(elmRuntime);
+        var initializer = window.initializers[i];
+        initializer(elmRuntime);
       }
     </script>
 
