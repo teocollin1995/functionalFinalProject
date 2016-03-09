@@ -73,8 +73,8 @@ plot range cutoff e =
   let graph = List.map (\x -> (50*x, 50*evaluate x e)) points in
   let graphs = separate1 cutoff graph in
   let paths = List.map (C.traced C.defaultLine << C.path) graphs in
-  let xaxis = C.traced C.defaultLine <| C.segment (-200,0) (200,0) in
-  let yaxis = C.traced C.defaultLine <| C.segment (0,-200) (0,200) in
+  let xaxis = C.traced C.defaultLine <| C.segment (-100,0) (100,0) in
+  let yaxis = C.traced C.defaultLine <| C.segment (0,-100) (0,100) in
   C.collage 400 400 <| xaxis :: yaxis :: paths
 
 main : Signal GE.Element
