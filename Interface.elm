@@ -69,6 +69,7 @@ buttonStyle =
       , ("left", "330pt")
       , ("background-color", "green")
       , ("border","none")
+      , ("border-radius","8pt")
       , ("color", "white")
       , ("padding", "10pt")
       , ("text-align","center")

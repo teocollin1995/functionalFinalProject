@@ -316,6 +316,12 @@ toInt e =
                   else Nothing
     _   -> Nothing
 
+toReal : Exp -> Float
+toReal e =
+  case e of
+    EReal x -> x
+    _       -> Debug.crash "toReal"
+               
 isNum : Exp -> Bool
 isNum e =
   case e of
