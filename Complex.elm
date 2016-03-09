@@ -1,6 +1,9 @@
 module Complex where
 
 import Expression exposing (Complex)
+
+complex a b = {re = a, im = b}
+
 i : Complex
 i = {re = 0, im = 1}
 
@@ -15,6 +18,9 @@ zero = {re = 0, im = 0}
 
 real : Complex -> Float
 real c = c.re
+
+isReal : Complex -> Bool
+isReal c = c.im == 0
 
 fromReal : Float -> Complex
 fromReal r = 

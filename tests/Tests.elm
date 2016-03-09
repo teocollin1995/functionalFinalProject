@@ -5,7 +5,7 @@ import CostlyLinear as CL
 import Complex as C
 import Expression exposing (Matrix, Vector, Complex)
 --https://github.com/Bogdanp/elm-combine/blob/2.0.1/tests/TestRunner.elm testing structure
-
+--idea -> test eigen values for real to just show that the properties hold
 
 --test square matricies
 --1x1
