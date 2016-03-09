@@ -76,6 +76,7 @@ import Debug
 import List
 import List.Extra as ListE
 import Array.Extra as ArrayE
+import CostlyLinear
 import Native.CostlyLinear
 
 {-| A mechanism for specificying the context of various operations. Basically, I want to be able to use my rowReduce function for real and complex numbers. So, I write a real and complex space and supply the real one to rowReduce when I'm using real numbers and the complex one to rowReduce when using complex numbers. The specalize function (TBW) gives a record containing all functions like rowReduce for a given space.
@@ -1059,12 +1060,12 @@ eigen : Matrix (Expression.Complex) -> Maybe EigenInfo --Maybe {values: Vector C
 eigen m = if not (isSquare m) then Nothing 
           else
             let 
-              x = (Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m)))
+              x = (CostlyLinear.eigen m)
               epsilon = 0.0000000001
               epsizero = \x -> if (abs x) < epsilon then 0 else x
               cepsizero = \x -> {re = epsizero x.re, im= epsizero x.im}
             in
-              Just {values = Array.fromList (List.map cepsizero x.values), cols = map (cepsizero) (Array.fromList (List.map (Array.fromList) x.cols))}
+              Just {values = x.values, cols = x.cols}
           
 
 

@@ -3,7 +3,7 @@ import Expression exposing (Matrix, Vector, Complex)
 import Complex as C
 import Array
 import Native.CostlyLinear
-import Linear as L
+
 
 
 r =  Array.fromList [  Array.fromList [C.fromReal 1, C.fromReal 2, C.fromReal 5], Array.fromList [C.fromReal 3, C.fromReal 5, C.fromReal (-1)], Array.fromList [C.fromReal 7, C.fromReal (-3), C.fromReal 5]]
@@ -17,7 +17,7 @@ eigen m =
       let
         anyC = List.all (\x -> x == True) (Array.toList (Array.map (\x -> List.all (\x -> x== True) (Array.toList (Array.map (C.isReal) x))) m ))
       in
-        if anyC then eigen3 m else eigen2 (Array.map (\x -> Array.map (C.real) x) m)
+        if not anyC then eigen3 m else eigen2 (Array.map (\x -> Array.map (C.real) x) m)
         
         
         
@@ -33,9 +33,13 @@ eigen2 m =
   let
     x = Native.CostlyLinear.eigens2 (Array.toList (Array.map (Array.toList) m))
   in
-    {values = Array.fromList x.values, cols = L.mapVector (L.normalizeVector L.complexSpace) (Array.fromList (List.map (Array.fromList) x.vectors))} --may need to transpose??
+    {values = Array.fromList x.values, cols = (Array.fromList (List.map (Array.fromList) x.vectors))} --may need to transpose??
 
-
+eigen4 m = 
+   let
+    x = Native.CostlyLinear.eigens2 (Array.toList (Array.map (Array.toList) m))
+  in
+    x
   
 --randomness in a horrible horrible way... for testing purpose
 randomComplex : a -> Complex
