@@ -84,7 +84,7 @@ chain2 v op e1 e2 =
 --should implement checks for h == 0 and what not
 
 ---
-epsilon = 0.0000000000001
+epsilon = 0.0000001
 interationMax = 50000
 --numeric diff stuff -> WILL NOT WORK IF THE DERIVATIVE DOES NOT EXIST!
 symetricDiffrenceQout : (Float -> Float) -> Float -> Float -> Float
@@ -103,24 +103,24 @@ stencil f x h =
 numDiff : (Float -> Float) -> Float -> Float -> Float -> Int ->  Float
 numDiff f ff x h n =
   let 
-    ff' = symetricDiffrenceQout f x (h / 5)
+    ff' = symetricDiffrenceQout f x (h / 2)
   in
     if abs (ff - ff') < epsilon 
     then ff' 
     else if n > interationMax then ff'
     else numDiff f ff' x (h / 5) (n+1)
   
--- numDiff' f ff x h =
---   let 
---     ff' = stencil f x (h / 5)
---   in
---     if abs (ff - ff') < epsilon 
---     then ff' 
---     else numDiff' f ff' x (h / 5)
+numDiff' f ff x h =
+  let 
+    ff' = stencil f x (h / 5)
+  in
+    if abs (ff - ff') < epsilon 
+    then ff' 
+    else numDiff' f ff' x (h / 5)
 
 
 numericDiff : (Float -> Float) -> Float -> Float
-numericDiff f x = numDiff f 100000000000000000 x (0.1) 0
+numericDiff f x = numDiff f 100000000000000000 x (1) 0
       
 
 
