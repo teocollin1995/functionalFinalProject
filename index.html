@@ -28,10 +28,11 @@
 
     window.initializers.push(function (elmRuntime) {
 	    elmRuntime.ports.signalToJS.subscribe(function (info) {
-		    if (info == "update") {
-			    var s = window.document.getElementById("input").value;
-			    console.log(s);
-			    elmRuntime.ports.signalFromJS.send(s);
+		  if (info == "update") {
+		        var s = window.document.getElementById("input").textContent;
+                        console.log(s);
+                        elmRuntime.ports.signalFromJS.send(s);
+                        
 		    }
 		    else {
 			    console.log(info);

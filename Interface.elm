@@ -37,13 +37,13 @@ inputStyle =
   Attr.style <|
       basicStyle ++
              [ ("position","relative")
-             --, ("height","100pt")
+             , ("height","50pt")
              , ("width", "300pt")
              --, ("left", "0pt")
              , ("border", "3pt")
              , ("border-style", "solid")
              , ("border-color","blue")
-             , ("placeholder", "'Enter your expression here'")
+             , ("background-color","white")
              ]
 
 outputStyle : Attribute
@@ -65,7 +65,8 @@ buttonStyle : Attribute
 buttonStyle =
   Attr.style
       [ ("position","absolute")
-      , ("left", "305pt")
+      , ("top", "30pt")
+      , ("left", "330pt")
       , ("background-color", "green")
       , ("border","none")
       , ("color", "white")
@@ -190,7 +191,7 @@ view model =
                       [ Html.text "Examples", br, dropDown ]
         in
         let input =
-              Html.textarea
+              Html.div
                     [ inputStyle, Attr.contenteditable True, Attr.id "input" ]
                     [ Html.text model.input ]
         in
@@ -239,8 +240,8 @@ eventsFromJS : Signal Event
 eventsFromJS =
   let foo s = UpModel <| \model ->
               case compute s of
-                Ok s' -> { model | output = Ok <| "$$" ++ s' ++ "$$" }
-                Err s' -> { model | output = Err s'}  
+                Ok s' -> { model | input = s, output = Ok <| "$$" ++ s' ++ "$$" }
+                Err s' -> { model | input = s, output = Err s'}  
   in
   Signal.map foo signalFromJS
 
