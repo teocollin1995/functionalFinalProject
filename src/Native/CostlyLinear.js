@@ -9761,15 +9761,22 @@ var cmatrixMerge = function(r,c,re,im){
 	var acc = [];
 	for(var i = 0; i < n; i++){
 //
-            if(isNaN(r[i][0] || r[i][0] == null)){continue;}
+
 	     var acc2 = new Array();
 	    for(var j = 0; j < m; j++){
-		acc2[j] = {re:r[i][j], im: 0}
-	    }
-	    acc.push(acc2);
-	}
-	return(acc);
+		if(isNaN(r[i][j]) || (r[i][j] == null)){
+                    acc2[j] = {re:0, im: 0}
+	        } else {
+                    acc2[j] = {re:r[i][j], im: 0}
+	        }
+            }
+            acc.push(acc2);
+        }
+	return(acc);                
+	
     }
+
+    
     else{
 	var n = c.length
 	var m = c[0].length
@@ -9778,8 +9785,12 @@ var cmatrixMerge = function(r,c,re,im){
 //            if(isNaN(c[i][0])){continue;}
 	    var acc2 = new Array();
 	    for(var j = 0; j < m; j++){
-
-		acc2[j] = {re: 0, im: c[i][j]};
+                if(isNaN(c[i][j]) || (c[i][j] == null)){
+                    acc2[j] = {re:0, im: 0}
+	        } else {
+                    acc2[j] = {re:0, im: c[i][j]}
+	        }
+		
 	    }
 	    acc.push(acc2);
 
@@ -9798,7 +9809,9 @@ var eig2 = function(cmatrix){
         acc.push(toArray(jsarray[i]))
     }
     var eigens = numeric.eig(acc);
-
+//    var redo = eigens.E.dot(numeric.T.diag(eigens.lambda)).dot(eigens.E.inv());
+    //return(redo)
+    //return(eigens)
     var eigenvals = null
     if(eigens.lambda.y == null){
     	if(eigens.lambda.x == null){

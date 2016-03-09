@@ -80,3 +80,46 @@ chain2 v op e1 e2 =
     -- add more binary operators
     _ -> Debug.crash "chain2"
     
+
+--numeric stuff
+--f x h 
+--higher order diffence qout
+--trapzoid
+
+---
+epsilon = 0.0000000000001
+--numeric diff stuff -> WILL NOT WORK IF THE DERIVATIVE DOES NOT EXIST!
+symetricDiffrenceQout : (Float -> Float) -> Float -> Float -> Float
+symetricDiffrenceQout f x h = 
+  if h == 0 then Debug.crash "Can't divide by 0"
+  else
+    (f (x+h) - f (x-h))/(2*h)
+
+
+stencil : (Float -> Float) -> Float -> Float -> Float
+stencil f x h = 
+  if h == 0 then Debug.crash "Can't divide by 0 "
+  else 
+    ((-1) * f (x+2*h) + 8 * f (x+h) - 8*f(x - h) + f(x-2*h)) / (12 * h)
+
+numDiff : (Float -> Float) -> Float -> Float -> Float -> Float
+numDiff f ff x h =
+  let 
+    ff' = symetricDiffrenceQout f x (h / 5)
+  in
+    if abs (ff - ff') < epsilon 
+    then ff' 
+    else numDiff f ff' x (h / 5)
+  
+-- numDiff' f ff x h =
+--   let 
+--     ff' = stencil f x (h / 5)
+--   in
+--     if abs (ff - ff') < epsilon 
+--     then ff' 
+--     else numDiff' f ff' x (h / 5)
+
+
+numericDiff : (Float -> Float) -> Float -> Float
+numericDiff f x = numDiff f 100000000000000000 x (0.1)
+      
