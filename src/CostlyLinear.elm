@@ -3,6 +3,7 @@ import Expression exposing (Matrix, Vector, Complex)
 import Complex as C
 import Array
 import Native.CostlyLinear
+import Linear as L
 
 
 r =  Array.fromList [  Array.fromList [C.fromReal 1, C.fromReal 2, C.fromReal 5], Array.fromList [C.fromReal 3, C.fromReal 5, C.fromReal (-1)], Array.fromList [C.fromReal 7, C.fromReal (-3), C.fromReal 5]]
@@ -13,10 +14,28 @@ r =  Array.fromList [  Array.fromList [C.fromReal 1, C.fromReal 2, C.fromReal 5]
 
 eigen : Matrix (Complex) -> {values: Vector Complex, cols: Matrix Complex}
 eigen m = 
+      let
+        anyC = List.all (\x -> x == True) (Array.toList (Array.map (\x -> List.all (\x -> x== True) (Array.toList (Array.map (C.isReal) x))) m ))
+      in
+        if anyC then eigen3 m else eigen2 (Array.map (\x -> Array.map (C.real) x) m)
+        
+        
+        
+
+eigen3 : Matrix (Complex) -> {values: Vector Complex, cols: Matrix Complex}
+eigen3 m = 
   let
     x = Native.CostlyLinear.eigens (Array.toList (Array.map (Array.toList) m))
   in
     {values = Array.fromList x.values, cols = Array.fromList (List.map (Array.fromList) x.cols)}
+eigen2 : Matrix (Float) -> {values: Vector Complex, cols: Matrix Complex}
+eigen2 m = 
+  let
+    x = Native.CostlyLinear.eigens2 (Array.toList (Array.map (Array.toList) m))
+  in
+    {values = Array.fromList x.values, cols = L.mapVector (L.normalizeVector L.complexSpace) (Array.fromList (List.map (Array.fromList) x.vectors))} --may need to transpose??
+
+
   
 --randomness in a horrible horrible way... for testing purpose
 randomComplex : a -> Complex
@@ -35,3 +54,4 @@ testInverse : Matrix (Complex) -> Matrix (Complex) -> Bool
 testInverse m ci = 1 == (Native.CostlyLinear.test_inverse (Array.toList (Array.map (Array.toList) m)) (Array.toList (Array.map (Array.toList) ci)))
                
                  
+
