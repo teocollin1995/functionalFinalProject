@@ -96,12 +96,17 @@ token1 val str = skipSpaces *> (always val <$> P.token str)
 
 parseReal : Parser Exp
 parseReal = skipSpaces *> (EReal <$> intOrFloat)
-            
+
+realpart : Parser Float
+realpart =
+  intOrFloat >>= \a ->
+  P.token "+" *>
+  P.succeed a
+   
 parseComplex : Parser Exp
 parseComplex =
   skipSpaces *>
-  intOrFloat >>= \a ->
-  P.token "+" *>
+  P.optional realpart 0 >>= \a ->
   skipSpaces  *>
   (P.optional intOrFloat 1) >>= \b ->
   P.token "i" *>
@@ -270,10 +275,10 @@ parseExp = P.recursively <| \_ ->
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ ->
                 parseDerv
+                <++ parseNum
                 <++ parseFun
                 <++ parseEVar
                 <++ parseMatrix
-                <++ parseNum
                 <++ parens prec0
                 --<++ parseConst
    in prec0
@@ -355,6 +360,7 @@ prec i e =
   case e of
     EReal x -> toString x
     EComplex x -> if x.im == 0 then toString x.re
+                  else if x.re == 0 then toString x.im ++ "i"
                   else toString x.re ++ "+" ++ toString x.im ++ "i"
     EVector v -> unparseVec v
     EMatrix m -> unparseMatrix m
