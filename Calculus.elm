@@ -98,3 +98,10 @@ stencil f x h =
   else 
     ((-1) * f (x+2*h) + 8 * f (x+h) - 8*f(x - h) + f(x-2*h)) / (12 * h)
 
+--numericDiff f x = 
+--numDiff f f' x h =
+  
+
+
+
+      
