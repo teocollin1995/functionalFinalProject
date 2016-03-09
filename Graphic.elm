@@ -14,22 +14,6 @@ type alias Range = (Float, Float)
 -- now only plot single variable function
 -- assuming all functions are univariate here
 
-evaluate_ : Float -> Exp -> Exp
-evaluate_ x e =
-  case e of
-    EReal _ -> e
-    EComplex _ -> Debug.crash "complex evaluation is not supported"
-    EConst _ -> e
-    EVar _ -> EReal x
-    EFun _ _ e1 -> evaluate_ x e1
-    EUnaryOp op e1 -> Parser.fromOk_ <| E.eval <| EUnaryOp op <| evaluate_ x e1
-    EBinaryOp op e1 e2 -> Parser.fromOk_ <| E.eval <|
-                            EBinaryOp op (evaluate_ x e1) (evaluate_ x e2)
-    _  -> Debug.crash "domain is not in the real numbers"
-
-evaluate : Float -> Exp -> Float
-evaluate x e = Parser.toReal <| evaluate_ x e
-
 genPoints : Float -> Float -> Float -> List Float
 genPoints step start end =
   let diff = end - start in
@@ -70,11 +54,11 @@ plot range cutoff e =
   let (start,end) = range in
   let step = 0.01 in
   let points = genPoints step start end in
-  let graph = List.map (\x -> (50*x, 50*evaluate x e)) points in
+  let graph = List.map (\x -> (50*x, 50*E.evaluate x e)) points in
   let graphs = separate1 cutoff graph in
   let paths = List.map (C.traced C.defaultLine << C.path) graphs in
   let xaxis = C.traced C.defaultLine <| C.segment (-150,0) (150,0) in
-  let yaxis = C.traced C.defaultLine <| C.segment (0,-140) (0,150) in
+  let yaxis = C.traced C.defaultLine <| C.segment (0,-150) (0,150) in
   C.collage 400 400 <| xaxis :: yaxis :: paths
 
 main : Signal GE.Element

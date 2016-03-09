@@ -4,7 +4,7 @@ import Expression exposing (..)
 import Complex as C
 import Linear as L
 import Calculus as Ca
-import ExpParser as Parser
+import ExpParser as Parser exposing (isFunc)
 
 import Array as A
 import Result as R
@@ -27,6 +27,7 @@ eval e = R.map Parser.simplify <|
       res1 >>= \e1 ->
         res2 >>= \e2 ->
           f e1 e2
+    EIntegral a b e -> Ok <| EReal <| numericIntegral a b e
     _ -> Ok e
 
 type alias UnaryFunc =
@@ -43,7 +44,8 @@ genUnaryFunc op f e =
     EComplex x -> Ok <| EComplex <| f.complexFun x
     EVar _ -> Ok <| EUnaryOp op e
     EFun _ _ _ -> Ok <| EUnaryOp op e
-    _  -> Err <| toString op ++ ": invalid input"
+    _  -> if isFunc e then Ok <| EUnaryOp op e
+          else Err <| toString op ++ ": invalid input"
           
 toRealfunc : Op -> (Complex -> Real) -> Exp -> Result String Exp
 toRealfunc op f e =
@@ -140,6 +142,10 @@ unparseBOp op =
              case var of
                EVar x -> eval <| Ca.derivative x e
                _      -> Debug.crash "derv: impossible"
+    NumDerv -> \e1 e2 ->
+               case e1 of
+                 EReal x -> Ok <| EReal <| numericDerv x e2
+                 _       -> Err "Numeric Derivative: invalid input"
     _    -> Debug.crash "unparseBOp"
 
 type alias BinaryFunc =
@@ -217,11 +223,25 @@ matrixMinus e1 e2 =
     (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.sub m1 m2
     _ -> Debug.crash "matrixMinus"
 
-isFunc : Exp -> Bool
-isFunc e =
+evaluate_ : Float -> Exp -> Exp
+evaluate_ x e =
   case e of
-    EVar _ -> True
-    EFun _ _ _ -> True
-    EUnaryOp _ e1 -> isFunc e1
-    EBinaryOp _ e1 e2 -> isFunc e1 || isFunc e2
-    _ -> False
+    EReal _ -> e
+    EComplex _ -> Debug.crash "complex evaluation is not supported"
+    EConst _ -> e
+    EVar _ -> EReal x
+    EFun _ _ e1 -> evaluate_ x e1
+    EUnaryOp op e1 -> Parser.fromOk_ <| eval <| EUnaryOp op <| evaluate_ x e1
+    EBinaryOp op e1 e2 -> Parser.fromOk_ <| eval <|
+                            EBinaryOp op (evaluate_ x e1) (evaluate_ x e2)
+    _  -> Debug.crash "domain is not in the real numbers"
+
+evaluate : Float -> Exp -> Float
+evaluate x e = Parser.toReal <| evaluate_ x e
+
+numericDerv : Float -> Exp -> Float
+numericDerv x e = Ca.numericDiff (flip evaluate e) x
+
+numericIntegral : Float -> Float -> Exp -> Float
+numericIntegral lower upper e =
+  Ca.simpsonIntegral (flip evaluate e) (lower,upper)

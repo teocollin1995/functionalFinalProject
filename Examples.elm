@@ -34,6 +34,10 @@ calculus2 = "d/dx (x^2 +y)"
 
 calculus3 = "d/dx (sin(x) + cos(y))"
 
+calculus4 = "d/dx x^2 at 2"
+
+calculus5 = "int sin(x) from -1 to 2"
+            
 examples : List (String, String)
 examples =
   [ ("examples","")
@@ -54,4 +58,6 @@ examples =
   , ("calculus: derivative", calculus1)
   , ("calculus: partial derivative1", calculus2)
   , ("calculus: partial derivative2", calculus3)
+  , ("calculus: numeric differentiation", calculus4)
+  , ("calculus: numeric integration", calculus5)
   ]

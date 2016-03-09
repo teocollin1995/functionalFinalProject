@@ -133,7 +133,7 @@ maybeParens p =
 parseConst : Parser Exp
 parseConst =
      (token1 (EConst Pi) "pi")
- <++ (token1 (EConst E) "e")
+ -- <++ (token1 (EConst E) "e")
 
 parseUOp : Parser (Exp -> Exp)
 parseUOp = skipSpaces *>
@@ -204,6 +204,36 @@ parseDerv =
   parseEVar >>= \var ->
   parseExp >>=\e ->
   P.succeed <| EBinaryOp Derv var e
+
+parseNumDerv : Parser Exp
+parseNumDerv =
+  P.recursively <| \_ ->
+  skipSpaces *>
+  P.token "d/d" *>
+  parseEVar *>
+  parseExp >>=\e ->
+  skipSpaces *>
+  P.token "at" *>
+  skipSpaces *>
+  intOrFloat >>= \a ->
+  skipSpaces >>= \_ ->
+  P.succeed <| EBinaryOp NumDerv (EReal a) e
+
+parseIntegral : Parser Exp
+parseIntegral =
+  skipSpaces *>
+  P.token "int" *>
+  parseExp >>= \e ->
+  skipSpaces *>
+  P.token "from" *>
+  skipSpaces *>
+  intOrFloat >>= \a ->
+  skipSpaces *>
+  P.token "to" *>
+  skipSpaces *>
+  intOrFloat >>= \b ->
+  skipSpaces >>= \_ ->
+  P.succeed <| EIntegral a b e
    
 allOps : List String
 allOps =
@@ -238,11 +268,11 @@ opStr s =
 strOp : Op -> String
 strOp op =
   case op of
-    Pi -> "pi"
+    Pi -> "\\pi"
     E  -> "e"
-    Sin -> "sin"
-    Cos -> "cos"
-    Tan -> "tan"
+    Sin -> "\\sin"
+    Cos -> "\\cos"
+    Tan -> "\\tan"
     ArcSin -> "arcsin"
     ArcCos -> "arccos"
     ArcTan -> "arctan"
@@ -274,13 +304,15 @@ parseExp = P.recursively <| \_ ->
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ ->
-                parseDerv
+                parseNumDerv
+                <++ parseIntegral
+                <++ parseDerv
                 <++ parseNum
                 <++ parseFun
                 <++ parseEVar
                 <++ parseMatrix
                 <++ parens prec0
-                --<++ parseConst
+                <++ parseConst
    in prec0
 
 parse : String -> Result String Exp
@@ -390,13 +422,19 @@ paren cutoff prec str =
   if prec > cutoff then "(" ++ str ++ ")"
   else str
 
+isFunc : Exp -> Bool
+isFunc e =
+  case e of
+    EVar _ -> True
+    EFun _ _ _ -> True
+    EUnaryOp _ e1 -> isFunc e1
+    EBinaryOp _ e1 e2 -> isFunc e1 || isFunc e2
+    _ -> False
+
 optionalParen : (Exp -> String) -> Exp -> String
 optionalParen f e =
   let paren s = "(" ++ s ++ ")" in
-  case e of
-    EVar _ -> paren (f e)
-    EFun _ _ _ -> paren (f e)
-    _ -> f e
+  if isFunc e then paren <| unparse e else unparse e
 
 unwrapAnnotation : String -> Exp -> String
 unwrapAnnotation ann e =

@@ -7,7 +7,7 @@ import ExpParser exposing (parse)
 
 
 --- derivatives ---
-
+               
 derivative : Var -> Exp -> Exp
 derivative v e =
   case e of
@@ -121,10 +121,6 @@ numDiff' f ff x h =
 
 numericDiff : (Float -> Float) -> Float -> Float
 numericDiff f x = numDiff f 100000000000000000 x (1) 0
-      
-
-
-
 
 type alias Partitions = List (Float,Float)
 
@@ -170,7 +166,9 @@ simpsonSum f p =  List.foldr (+) 0 (List.map (\ i -> simpson f i) p)
 
 --better if some derivative exists?
 simpsonIntegral : (Float -> Float) -> (Float, Float) -> Float
-simpsonIntegral f (a,b) = integralApproximation f simpsonSum (splitPartitions 6 [(a,b)]) 10000000000000 0
+simpsonIntegral f (a,b) =
+  let res = integralApproximation f simpsonSum (splitPartitions 6 [(a,b)]) 10000000000000 0 in
+  if abs res < 10^(-16) then 0 else res
 
 
 --if we want something faster we could look at: https://en.wikipedia.org/wiki/Romberg%27s_method

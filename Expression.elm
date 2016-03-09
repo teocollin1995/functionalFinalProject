@@ -16,6 +16,7 @@ type Exp =
   | EVector (Vector Exp)
   | EFun Name (List Var) Exp -- for example f(x,y) = x^2 + y^2
   | EAnnot String Exp --stuff some information for unparsing
+  | EIntegral Float Float Exp -- integral has 3 arguments, so we hack like this
     
 type alias Var = String
 type alias Name = String
@@ -44,7 +45,8 @@ type Op =
    | Pow | Mod
    -- domain specific operators
    | Derv
-   | Integral
+   | NumDerv
+   --| Integral
    | Det
    | EigenValue
    | EigenVector
