@@ -6,10 +6,12 @@ import Html.Events as Events
 import Signal exposing (Mailbox, mailbox)
 import Time
 import Result as R
+import Json.Decode as Decode
 
 import Expression exposing (..)
 import ExpParser as Parser
 import Eval as E
+import Examples exposing (examples)
 
 -- CSS classes here ---
 
@@ -104,7 +106,19 @@ errorStyle =
       , ("font-family", "Arial Black")
       , ("color", "red")
       ]
-  
+
+dropDownStyle : Attribute
+dropDownStyle =
+  Attr.style
+      [ ("position","absolute")
+      , ("right", "50pt")
+      , ("width", "200pt")
+      , ("font-size", "20pt")
+      , ("font-family", "Book Antiqua")
+      ]
+
+--------------------------------------------------
+
 compute : String -> Result String String
 compute input =
   case Parser.parse input of
@@ -138,10 +152,43 @@ fromOk mx =
   case mx of
     Ok s -> s
     Err s -> s
-             
+
+-- http://stackoverflow.com/questions/32426042/how-to-print-index-of-selected-option-in-elm
+targetSelectedIndex : Decode.Decoder Int
+targetSelectedIndex = Decode.at ["target", "selectedIndex"] Decode.int
+
+index : Int -> List a -> a
+index n xs =
+  if n < 0 then Debug.crash "index: negative index"
+  else case xs of
+         [] -> Debug.crash "index: empty list"
+         x::xs' -> if n == 0 then x else index (n-1) xs'
+          
 view : Model -> Html
 view model =
-  let body = 
+  let body =
+        let options =
+              let foo (name,code) =
+                    Html.option [ Attr.value name] [ Html.text name ]
+              in
+                List.map foo examples
+        in
+        let dropDown =
+              Html.select
+                  [ Attr.contenteditable False
+                  --, dropDownStyle
+                  , Events.on "change" targetSelectedIndex <| \i ->
+                    let (_,code) = index i examples in
+                    Signal.message evtMailbox.address <| UpModel <| \model ->
+                      { model | input = code }
+                   ]
+              options
+        in
+        let br = Html.br [] [] in
+        let example = Html.span
+                      [ dropDownStyle ]
+                      [ Html.text "Examples", br, dropDown ]
+        in
         let input =
               Html.textarea
                     [ inputStyle, Attr.contenteditable True, Attr.id "input" ]
@@ -165,7 +212,6 @@ view model =
               ] 
               [ Html.text "See Result" ]
         in
-        let br = Html.br [] [] in
         let inputCaption =
               Html.span [ captionStyle1 ] [ Html.text "Input"]
         in
@@ -174,7 +220,7 @@ view model =
         in
         Html.div
           [ containerStyle ]
-          [ inputCaption, br, input, btn, br, br, outputCaption, output ]
+          [ inputCaption, example, br, input, btn, br, br, outputCaption, output ]
   in
   let header =
      let caption =
