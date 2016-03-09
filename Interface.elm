@@ -7,11 +7,14 @@ import Signal exposing (Mailbox, mailbox)
 import Time
 import Result as R
 import Json.Decode as Decode
+import Graphics.Element as GE
+import Graphics.Collage
 
 import Expression exposing (..)
 import ExpParser as Parser
 import Eval as E
 import Examples exposing (examples)
+import Graphic as G
 
 -- CSS classes here ---
 
@@ -51,8 +54,8 @@ outputStyle =
   Attr.style <|
       basicStyle ++
              [ ("position","relative")
-             , ("height", "150pt")
-             , ("width","450pt")
+             , ("height", "100pt")
+             , ("width","350pt")
              --, ("top","50pt")
              --, ("left", "-50pt")
              , ("border", "3pt")
@@ -61,23 +64,33 @@ outputStyle =
              , ("background-color", "white")
              ]
 
-buttonStyle : Attribute
-buttonStyle =
-  Attr.style
-      [ ("position","absolute")
-      , ("top", "30pt")
-      , ("left", "330pt")
-      , ("background-color", "green")
-      , ("border","none")
-      , ("border-radius","8pt")
-      , ("color", "white")
-      , ("padding", "10pt")
-      , ("text-align","center")
-      , ("text-decoration", "none")
-      , ("display", "inline-block")
-      , ("font-size","16pt")
-      , ("cursor", "pointer")
-      ]
+graphicOutputStyle : Attribute
+graphicOutputStyle =
+  Attr.style <|
+      basicStyle ++
+        [ ("position", "absolute")
+        , ("height", "250pt")
+        , ("width", "300pt")
+        , ("top","60pt")
+        , ("right", "0pt")
+        , ("border","3pt")
+        , ("border-style", "solid")
+        , ("border-color", "green")
+        , ("background-color", "white")
+        ]
+      
+buttonBasic =
+  [ ("position","absolute")
+  , ("left", "330pt")
+  , ("border","none")
+  , ("border-radius","8pt")
+  , ("color", "white")
+  , ("text-align","center")
+  , ("text-decoration", "none")
+  , ("display", "inline-block")
+  , ("font-size","16pt")
+  , ("cursor", "pointer")
+  ]
 
 captionStyle : Attribute
 captionStyle =
@@ -137,6 +150,7 @@ evtMailbox = mailbox (UpModel identity)
 type alias Model =
   { input : String
   , output : Result String String
+  , graphic : Maybe GE.Element
   }
 
 type Event = UpModel (Model -> Model)
@@ -149,6 +163,12 @@ upstate event model =
 events : Signal Event
 events = Signal.merge evtMailbox.signal eventsFromJS
 
+updateGraphic : String -> (Maybe String, Maybe GE.Element)
+updateGraphic input =
+  case Parser.parse input of
+    Ok e -> (Nothing, Just <| G.plot (-1,1) 100 e)
+    Err s -> (Just s, Nothing)
+             
 fromOk : Result String String -> String
 fromOk mx =
   case mx of
@@ -205,14 +225,58 @@ view model =
                           [ outputStyle, Attr.contenteditable False, Attr.id "output" ]
                           [ Html.strong [ errorStyle ] [ Html.text s]]
         in
-        let btn =
+        let graphicOutput =
+               case model.graphic of
+                Just graph ->  Html.div
+                                 [ graphicOutputStyle, Attr.id "graphicOutput" ]
+                                 [ Html.fromElement graph ]
+                _          ->  Html.div [ graphicOutputStyle, Attr.id "graphicOutput" ] []
+        in              
+        let computeBtn =
             Html.button
               [ Attr.contenteditable False
-              , buttonStyle
+              , Attr.style <|
+                    buttonBasic ++
+                      [ ("top", "0pt")
+                      , ("background-color", "green")
+                      , ("padding", "10pt")
+                      ]
               , Events.onMouseDown btnMailbox.address "update"
               , Events.onMouseUp btnMailbox.address (fromOk model.output)
               ] 
-              [ Html.text "See Result" ]
+              [ Html.text "Compute" ]
+        in
+        let clearBtn =
+              Html.button
+                  [ Attr.contenteditable False
+                  , Attr.style <|
+                        buttonBasic ++
+                          [ ("top", "45pt")
+                          , ("background-color", "#269F40")
+                          , ("padding", "10pt 24pt")
+                          ]
+                  , Events.onClick evtMailbox.address <| UpModel <| \model ->
+                    { model | input = "", output = Ok ""}
+                  -- , Events.onMouseUp btnMailbox.address "clear"
+                  ]
+                  [ Html.text "Clear" ]
+        in
+        let plotBtn =
+              Html.button
+                  [ Attr.contenteditable False
+                  , Attr.style <|
+                        buttonBasic ++
+                          [ ("top", "90pt")
+                          , ("background-color","#73B76D")
+                          , ("padding", "10pt 29pt")
+                          ]
+                  , Events.onMouseDown btnMailbox.address "update"
+                  , Events.onMouseUp evtMailbox.address <| UpModel <| \model ->
+                    case updateGraphic model.input of
+                      (Nothing, g) -> { model | graphic = g }
+                      (Just s, _) -> { model | output = Err s, graphic = Nothing }
+                  ]
+                  [ Html.text "Plot" ]
         in
         let inputCaption =
               Html.span [ captionStyle1 ] [ Html.text "Input"]
@@ -222,7 +286,7 @@ view model =
         in
         Html.div
           [ containerStyle ]
-          [ inputCaption, example, br, input, btn, br, br, outputCaption, output ]
+          [ inputCaption, example, br, input, computeBtn, clearBtn, plotBtn, graphicOutput, br, br, outputCaption, output ]
   in
   let header =
      let caption =
@@ -233,7 +297,7 @@ view model =
      Html.body [ bodyStyle ] [ header, body ]
 
 initModel : Model
-initModel = { input = "", output = Ok ""}
+initModel = { input = "", output = Ok "", graphic = Nothing}
 
 --- interaction with javascript ---
 
