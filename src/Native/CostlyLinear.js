@@ -9880,7 +9880,7 @@ var eig2 = function(cmatrix){
 //     xmlHttp.open("GET", theUrl, true); // true for asynchronous 
 //     xmlHttp.send(null);
 // };
-// //https://stackoverflow.com/questions/9922101/get-json-data-from-external-url-and-display-it-in-a-div-as-plain-text
+//https://stackoverflow.com/questions/9922101/get-json-data-from-external-url-and-display-it-in-a-div-as-plain-text
 // var getJSON = function(url) {
 //   return new Promise(function(resolve, reject) {
 //     var xhr = new XMLHttpRequest();
@@ -9897,6 +9897,74 @@ var eig2 = function(cmatrix){
 //     xhr.send();
 //   });
 // };
+
+var getJSONS = function(url) {
+
+    var Httpreq = new XMLHttpRequest();
+    Httpreq.open("GET",url,false);
+    Httpreq.send(null);
+    return(JSON.parse(Httpreq.responseText));
+}
+
+// var jsonComplexToOurComplex = function(str){
+//     if(c.indexOf('-') == -1){
+        
+//         splitit = str.split('+')
+//         n = splitit.length;
+//         if (n==1) {
+//             c = splitit[0]
+//             if (c.indexOf('i') == -1){
+//                 return({re: parseFloat(c), im: 0})
+//             }
+//             else{
+//                 return({re:0, im: parseFloat(c.replace('i',''))})
+//             }
+
+//         }
+//         else {
+//             re = parseFloat(splitit[0])
+//             im = parseFloat(splitit[1].replace('i',''))
+//             return({re:re,im:im})
+
+//         }
+//     }
+//     else if (c.indexOf('-') == 0){ //negative at top
+//         splitit = str.split('-')
+
+//     }
+// }
+
+var complexParse = function(str){
+
+    temp = Jmat.Complex.parse(str)
+    return({re:temp.re,im:temp.im })
+}
+
+var eigen5 = function(url){
+
+    json = getJSONS(url);
+    values = json['val']
+    var vars = [];
+    for(var x in values){
+        vars.push(complexParse(values[x]))
+    }
+    vectors = json['vector']
+    var vecs = [];
+
+    for(var x in vectors){
+        var acc2 = new Array();
+        for(var y in vectors[x]){
+
+            acc2.push(complexParse(vectors[x][y]))
+        }
+        vecs.push(list(acc2));
+        
+    }
+    
+
+    return({values: list(vars), cols:list(vecs)});
+
+}
 
 // var eigenvalues = function(url){
 
@@ -9925,7 +9993,7 @@ var make = function make(elm) {
     if (elm.Native.CostlyLinear.values) return elm.Native.CostlyLinear.values;
 
     // return the object of your module's stuff!
-    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det, 'random_int': random_int, 'test_trace': test_trace, 'test_inverse':test_inverse, 'eigens2':eig2};
+    return elm.Native.CostlyLinear.values = {'eigens' : eigens, 'random_complex' : random_complex, 'test_det': test_det, 'random_int': random_int, 'test_trace': test_trace, 'test_inverse':test_inverse, 'eigens2':eig2, 'eigens5':eigen5};
 };
 
 // setup code for MyModule
