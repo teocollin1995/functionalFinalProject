@@ -4,7 +4,9 @@ Here is some instructions on how to use the interface:
 
 First run make to compile all the code. Then open index.html and in the input box you can enter the wolframalpha-format input and use compute to compute the result. Also you can plot functions using the plot button.
 
-To use individual libraries (complex, Linear, Calculus) you load them into the repl or include them in whatever. Note that while we are reasonably confident about most functionality, not everything is sure. This is okay because a good portion of what we are unsure of is in not needed for the interface, but was part of an effort to build a more general system. And again, more time will be spent on this in the future as we want to have these be useful for more than just this project. As will be elaborate in Teo's part, you can only use eigen and diagnolziation stuff within a compiled file when you are connected to the internet. 
+To use individual libraries (complex, Linear, Calculus) you load them into the repl or include them in whatever. Note that while we are reasonably confident about most functionality, not everything is sure. This is okay because a good portion of what we are unsure of is in not needed for the interface, but was part of an effort to build a more general system. And again, more time will be spent on this in the future as we want to have these be useful for more than just this project. As will be elaborate in Teo's part, you can only use eigen and diagnolziation stuff within a compiled file when you are connected to the internet.
+
+One note when using the interface with eigen stuff. We did not normalize the vectors so they will be off by the norm of the relevant vector. 
 
 what we have accomplished, overall (Written by Bowen):
 
