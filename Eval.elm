@@ -101,8 +101,9 @@ unparseUOp op =
     Floor ->  baz <| toFloat << floor
     Ceiling -> baz <| toFloat << ceiling
     Round -> baz <| toFloat << round
-    Sqrt -> foo { realFun = sqrt, complexFun = fst << C.sqrt } -- this needs to be fixed
+    Sqrt -> foo { realFun = sqrt, complexFun = fst << C.sqrt } 
     Log -> foo { realFun = logBase 10, complexFun = flip C.ln 0 } -- also this
+    Negate -> foo { realFun = \x -> (-1)*x, complexFun = \x -> C.mult (C.fromReal (-1)) x }
     Abs -> \e ->
            case e of
              EReal x -> Ok <| EReal <| abs x
@@ -136,8 +137,8 @@ unparseBOp op =
     Plus -> foo { realFun = (+), complexFun = C.add, matrixFun = matrixMult }
     Minus -> foo { realFun = (-), complexFun = C.sub, matrixFun = matrixMinus }
     Mult -> foo { realFun = (*), complexFun = C.mult, matrixFun = matrixMult }
-    Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always <| always dummy }
-    Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = always <| always dummy }
+    Frac -> foo { realFun = (/), complexFun = C.div, matrixFun = always <| always <| Err "cannot divide by a matrix" }
+    Pow  -> foo { realFun = (^), complexFun = C.pow, matrixFun = matrixPow }
     Derv -> \var e ->
              case var of
                EVar x -> eval <| Ca.derivative x e
@@ -151,7 +152,7 @@ unparseBOp op =
 type alias BinaryFunc =
   { realFun : Float -> Float -> Float
   , complexFun : Complex -> Complex -> Complex
-  , matrixFun : Exp -> Exp -> Matrix Exp
+  , matrixFun : Exp -> Exp -> Result String (Matrix Exp)
   }
                 
 genBinaryFunc : Op -> BinaryFunc -> Exp -> Exp -> Result String Exp
@@ -165,8 +166,8 @@ genBinaryFunc op f e1 e2 =
     (_, EVar _) -> Ok <| EBinaryOp op e1 e2
     (EFun _ _ _, _) -> Ok <| EBinaryOp op e1 e2
     (_, EFun _ _ _) -> Ok <| EBinaryOp op e1 e2
-    (EMatrix _, _) -> Ok <| EMatrix <| f.matrixFun e1 e2
-    (_, EMatrix _) -> Ok <| EMatrix <| f.matrixFun e1 e2
+    (EMatrix _, _) -> R.map EMatrix <| f.matrixFun e1 e2
+    (_, EMatrix _) -> R.map EMatrix <| f.matrixFun e1 e2
     _  -> if isFunc e1 || isFunc e2 then Ok <| EBinaryOp op e1 e2
           else Err <| toString op ++ ": invalid input"
 
@@ -201,28 +202,35 @@ expSpace =
                _  -> Debug.crash "abs"
   }
 
-matrixMult : Exp -> Exp -> Matrix Exp
+matrixMult : Exp -> Exp -> Result String (Matrix Exp)
 matrixMult e1 e2 =
   case (e1,e2) of
-    (EMatrix m1, EMatrix m2) -> L.matrixMult expSpace m1 m2
-    (EReal x, EMatrix m) -> L.scaleMatrix expSpace e1 m
-    (EComplex x, EMatrix m) -> L.scaleMatrix expSpace e1 m
-    (EMatrix m, EReal x) -> L.scaleMatrix expSpace e2 m
-    (EMatrix m, EComplex x) -> L.scaleMatrix expSpace e2 m
-    _ -> Debug.crash "matrixMult"
+    (EMatrix m1, EMatrix m2) -> Ok <| L.matrixMult expSpace m1 m2
+    (EReal x, EMatrix m) -> Ok <| L.scaleMatrix expSpace e1 m
+    (EComplex x, EMatrix m) -> Ok <| L.scaleMatrix expSpace e1 m
+    (EMatrix m, EReal x) -> Ok <|  L.scaleMatrix expSpace e2 m
+    (EMatrix m, EComplex x) -> Ok <| L.scaleMatrix expSpace e2 m
+    _ -> Err "matrixMult: invalid input"
 
-matrixPlus : Exp -> Exp -> Matrix Exp
+matrixPlus : Exp -> Exp -> Result String (Matrix Exp)
 matrixPlus e1 e2 =
   case (e1, e2) of
-    (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.add m1 m2
-    _ -> Debug.crash "matrixPlus"
+    (EMatrix m1, EMatrix m2) -> Ok <| L.elementWise expSpace.add m1 m2
+    _ -> Err "matrixPlus: invalid input"
 
-matrixMinus : Exp -> Exp -> Matrix Exp
+matrixMinus : Exp -> Exp -> Result String (Matrix Exp)
 matrixMinus e1 e2 =
   case (e1, e2) of
-    (EMatrix m1, EMatrix m2) -> L.elementWise expSpace.sub m1 m2
-    _ -> Debug.crash "matrixMinus"
+    (EMatrix m1, EMatrix m2) -> Ok <| L.elementWise expSpace.sub m1 m2
+    _ -> Err "matrixMinus: invalid input"
 
+matrixPow : Exp -> Exp -> Result String (Matrix Exp)
+matrixPow e1 e2 =
+  case (e1,e2) of
+    (EMatrix m, EReal n) -> if Parser.isInt n then Ok <| L.matrixPower expSpace (round n) m
+                            else Err "matrixPow: invalid input"
+    _                    -> Err "matrixPow: invalid input"
+                            
 evaluate_ : Float -> Exp -> Exp
 evaluate_ x e =
   case e of
