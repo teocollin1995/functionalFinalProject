@@ -1,4 +1,10 @@
-
+//http://www.numericjs.com/
+//the author requests citation via:
+// @misc{
+// numericjs,
+// Author = {S{\'e}bastien Loisel},
+// Title = {Numeric Javascript},
+// howpublished = {\url{http://www.numericjs.com/}} }
 var numeric = (typeof exports === "undefined")?(function numeric() {}):(exports);
 if(typeof global !== "undefined") { global.numeric = numeric; }
 
@@ -9897,7 +9903,7 @@ var eig2 = function(cmatrix){
 //     xhr.send();
 //   });
 // };
-
+//http://ruben.verborgh.org/blog/2012/12/31/asynchronous-error-handling-in-javascript/ investigate at a later date...
 var getJSONS = function(url) {
     try{
         var Httpreq = new XMLHttpRequest();
