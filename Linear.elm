@@ -960,8 +960,8 @@ matrixPower space n m =
   if n < 0 then case invert space m of
                   Nothing -> Debug.crash "matrix not invertible"
                   Just m' -> matrixPower space (-n) m'
-  else if n == 0 then identity space n
-  else matrixMult space m <| matrixPower space (n-1) m
+  else if n == 0 then identity space (nrows m)
+  else matrixMult space m (matrixPower space (n-1) m)
 
 {-| Attemps to invert a matrix. Returns Just (the inverse) if it can and returns Nothing if there is no inverse.
 
