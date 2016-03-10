@@ -35,9 +35,9 @@
 	    }
             else if (info == "clear") {
                 var input_node = window.document.getElementById("input");
-                input_node.textContent = "";
+                //input_node.textContent = "";
                 var output_node = window.document.getElementById("output");
-                //output_node.textContent = "";
+                output_node.textContent = "";
             }
 		else {
 		    console.log(info);
@@ -53,6 +53,9 @@
                         MathJax.Hub.Queue(["Typeset",MathJax.Hub,"output"])
 		    }
                     else {
+                        var node = window.document.getElementById("output");
+                        removeAll(node);
+                        node.textContent = info;
                         MathJax.Hub.Queue(["Typeset",MathJax.Hub,"output"]);
                     }
 		}

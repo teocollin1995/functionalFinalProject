@@ -192,7 +192,8 @@ events = Signal.merge evtMailbox.signal eventsFromJS
 updateGraphic : String -> (Maybe String, Maybe GE.Element)
 updateGraphic input =
   case Parser.parse input of
-    Ok e -> (Nothing, Just <| G.plot (-1,1) 150 e)
+    Ok e -> if Parser.isFunc e || Parser.isRealConst e then (Nothing, Just <| G.plot (-1,1) 150 e)
+            else (Just "plot error: input not plottable", Nothing)
     Err s -> (Just "parse error: Please check your input", Nothing)
              
 fromOk : Result String String -> String
@@ -283,7 +284,7 @@ view model =
                           ]
                   , Events.onClick evtMailbox.address <| UpModel <| \model ->
                     { model | input = "", output = Ok "", graphic = Nothing}
-                  -- , Events.onMouseUp btnMailbox.address "clear"
+                  , Events.onMouseUp btnMailbox.address "clear"
                   ]
                   [ Html.text "Clear" ]
         in

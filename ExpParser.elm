@@ -447,6 +447,13 @@ isFunc e =
     EBinaryOp _ e1 e2 -> isFunc e1 || isFunc e2
     _ -> False
 
+isRealConst : Exp -> Bool
+isRealConst e =
+  case e of
+    EReal _ -> True
+    EConst _ -> True
+    _   -> False
+           
 optionalParen : Op -> (Exp -> String) -> Exp -> String
 optionalParen op f e =
   let paren s = "(" ++ s ++ ")" in
