@@ -18,6 +18,8 @@ module Linear
 
 In order to allow you to accomplish these operations in full generality, we have created a Space type where you define zero, one, addition, multiplication, subtraction, division, and from real. Once you supply this for a particular type, you can specalize all the functions that require any of these operations. Any function that did not require these operations can be used for any Matrix a or Vector a.
 
+Most of everything should sort of work. The only parts that have no been subjected to some testing are extendMatrix throught horizontalJoin. Everything else should be at leat OKAY. With regard to the row reduction stuff, I will note that these could be improved in a few ways such as telling you when they can't do the full reduction and collecting the coefficents along the privots so that they can be used for more advanced determiant testing.
+
 Note that for all functions take rows and cols, the rows are alwalys given first and then the cols. So for unsafeGetM : Int -> Int -> Matrix a -> a , the first argument is a row, the second is the column. 
 
 
