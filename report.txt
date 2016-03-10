@@ -1,0 +1,13 @@
+what we have accomplished:
+
+Our Elm version of WolframAlpha now has most(?) of the core functionalities of the actually wolframalpha, including basic numerical operations, basic functions (the built-in ones), complex numbers and functions, most of the linear algebra library (matrix operations, eigenvalue, eigenvector, diagonalization,etc), some basic calculus functionalities (symbolic differentiation, numeric differentiation, numeric integration) and basic plotting.
+
+However, there are definitely some defects in the functionalities that we have implemented. For example, the interface looks way worse than the actual wolframalpha. Also, the output is not formatted in a way that as informative as the actual wolframalpha output. Moreover, the plotting part is very crude and can only allow plotting in [-1,1] interval (it should be easy to allow the user to choose the domain as they like, but we don't have time for that).
+
+In the implementation of the interface, I used ports to get the user input and the send that to Elm to perform computations. That involves some javascript code and is relatively easy to deal with. The main diffculties I had consist of two parts: dynamically embedding latex into html and web design(!) The reason for embedding latex into html is that we sometimes have matrix as output and hence it would look very ugly in plain text. However, to dynamically render the output in latex takes a lot of energy, for the API that I use to achieve this, which is called MathJax, seems to have some bugs (at least I was unable to use some of the functions they provide), which cause me a lot of trouble trying to get everything working. Eventually I was able to do it in a very hacky way by writing some javascript function that manipulates the html. Another diffculty, which is web design, also causes me a lot of trouble because I guess I don't really know how to design a nice-looking web-page and placing each element in the right position also troubled me...
+
+Here is some instructions on how to use the interface:
+
+First run make to compile all the code. Then open index.html and in the input box you can enter the wolframalpha-format input and use compute to compute the result. Also you can plot functions using the plot button.
+
+Note: for symbolic differentiation the command is like "d/dx x", for numeric differentiation the command is like "d/dx x at 1", and for numeric integration the command is like "int x from 1 to 2". You can look at the examples that I included as a reference of how to use the interface.

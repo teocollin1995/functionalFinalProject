@@ -55,7 +55,7 @@ outputStyle =
       basicStyle ++
              [ ("position","relative")
              , ("height", "100pt")
-             , ("width","350pt")
+             , ("width","370pt")
              --, ("top","50pt")
              --, ("left", "-50pt")
              , ("border", "3pt")
