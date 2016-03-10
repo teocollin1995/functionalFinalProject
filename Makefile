@@ -5,5 +5,6 @@ loc:
 	Expression.elm \
 	Complex.elm Linear.elm \
 	OurParser.elm ExpParser.elm \
-	Eval.elm Interface.elm \
-	port.js index.html
+	Eval.elm Graphic.elm \
+	Examples.elm Interface.elm \
+	index.html

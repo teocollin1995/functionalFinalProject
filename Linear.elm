@@ -10,7 +10,7 @@ module Linear
   extendMatrix, extendMatrixTo,
   submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors,
   transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,
-   elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector, matrixMult,
+   elementWise, vectorMap2, dotProd,vectorNorm, normalizeVector, matrixMult,matrixPower,
     invert, invertable, trace, diagProd, simpleDet, simpleDet1,
     eigenValues, eigenVectors,diagonalization,eigen) where 
 
@@ -56,7 +56,7 @@ Note that for all functions take rows and cols, the rows are alwalys given first
 @docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,vectorNorm, normalizeVector
 
 # Operations on Two Matricies or Two Vectors
-@docs elementWise, vectorMap2, dotProd,matrixMult
+@docs elementWise, vectorMap2, dotProd,matrixMult, matrixPower
 
 # Matrix properties
 @docs  invert, invertable, trace, diagProd, simpleDet, simpleDet1
@@ -953,8 +953,15 @@ matrixMult space m1 m2 =
       in
         Array.map (\x -> Array.map x colsofm2) (Array.map localDotProd rowsofm1 )
 
+{-| compute the power of a matrix -}
 
-
+matrixPower : Space a -> Int -> Matrix a -> Matrix a
+matrixPower space n m =
+  if n < 0 then case invert space m of
+                  Nothing -> Debug.crash "matrix not invertible"
+                  Just m' -> matrixPower space (-n) m'
+  else if n == 0 then identity space n
+  else matrixMult space m <| matrixPower space (n-1) m
 
 {-| Attemps to invert a matrix. Returns Just (the inverse) if it can and returns Nothing if there is no inverse.
 

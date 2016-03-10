@@ -251,7 +251,10 @@ between open close p =
   p `andThen` \a ->
   close *>
   succeed a
-          
+
+look : Parser String
+look = Direct <| \s -> [ (s,s) ]
+       
 {-| Variant of `map` that ignores the result of the parser -}
 (<$) : result -> Parser x -> Parser result
 (<$) f p =

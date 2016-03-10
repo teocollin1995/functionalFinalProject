@@ -119,6 +119,19 @@ captionStyle2 =
       , ("font-family", "Palatino Linotype")
       , ("color", "black")
       ]
+
+captionStyle3 : Attribute
+captionStyle3 =
+  Attr.style
+      [ ("position","absolute")
+      --, ("left", "0pt")
+      --, ("bottom","20pt")
+      , ("right", "245pt")
+      , ("top","340pt")
+      , ("font-size", "10pt")
+      , ("font-family", "Arial")
+      , ("color", "black")
+      ]
   
 bodyStyle : Attribute
 bodyStyle =
@@ -296,9 +309,12 @@ view model =
         let graphicCaption =
               Html.span [ captionStyle2 ] [ Html.text "Graphic Output" ]
         in
+        let graphicInfo =
+              Html.span [ captionStyle3 ] [ Html.text "domain: [-1,1]" ]
+        in
         Html.div
           [ containerStyle ]
-          [ inputCaption, example, br, input, computeBtn, clearBtn, plotBtn, graphicCaption, graphicOutput, br, br, br, outputCaption, output ]
+          [ inputCaption, example, br, input, computeBtn, clearBtn, plotBtn, graphicCaption, graphicInfo, graphicOutput, br, br, br, outputCaption, output ]
   in
   let header =
      let caption =

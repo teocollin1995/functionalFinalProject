@@ -110,7 +110,11 @@ parseComplex =
   skipSpaces  *>
   (P.optional intOrFloat 1) >>= \b ->
   P.token "i" *>
-  P.succeed (EComplex {re = a, im = b})
+  P.look >>= \s ->
+    case String.toList s of
+      [] -> P.succeed (EComplex {re = a, im = b})
+      c::cs -> if isLetter c then P.empty
+               else P.succeed (EComplex {re = a, im = b})
 
 parseNum : Parser Exp
 parseNum = parseComplex <++ parseReal
@@ -304,13 +308,13 @@ parseExp = P.recursively <| \_ ->
                 <++ (token1 (EBinaryOp Mod) "%")
         prec3 = P.recursively <| \_ -> P.prefix prec4 parseUOp
         prec4 = P.recursively <| \_ ->
-                parseNumDerv
+                parseMatrix
+                <++ parseNumDerv
                 <++ parseIntegral
                 <++ parseDerv
                 <++ parseNum
                 <++ parseFun
                 <++ parseEVar
-                <++ parseMatrix
                 <++ parens prec0
                 <++ parseConst
    in prec0
