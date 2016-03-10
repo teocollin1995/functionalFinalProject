@@ -9899,11 +9899,20 @@ var eig2 = function(cmatrix){
 // };
 
 var getJSONS = function(url) {
-
-    var Httpreq = new XMLHttpRequest();
-    Httpreq.open("GET",url,false);
-    Httpreq.send(null);
-    return(JSON.parse(Httpreq.responseText));
+    try{
+        var Httpreq = new XMLHttpRequest();
+        Httpreq.open("GET",url,false);
+        Httpreq.send(null);
+        if (Httpreq.status == 200){
+            return(JSON.parse(Httpreq.responseText));
+        }
+        else
+            return(0);
+        }
+    catch(err){
+        return(0);
+    }
+    
 }
 
 // var jsonComplexToOurComplex = function(str){
@@ -9943,6 +9952,9 @@ var complexParse = function(str){
 var eigen5 = function(url){
 
     json = getJSONS(url);
+    if(json == 0 ){
+        return({values: list([]), cols:list([]), status: 1});
+    }
     values = json['val']
     var vars = [];
     for(var x in values){
@@ -9962,7 +9974,7 @@ var eigen5 = function(url){
     }
     
 
-    return({values: list(vars), cols:list(vecs)});
+    return({values: list(vars), cols:list(vecs), status: 1});
 
 }
 

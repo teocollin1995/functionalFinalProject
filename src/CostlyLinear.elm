@@ -9,15 +9,16 @@ r =  Array.fromList [  Array.fromList [C.fromReal 1, C.fromReal 2, C.fromReal 5]
 --toFloat((Array.Extra.getUnsafe 0 (Array.fromList l)).re)
 --l = Native.CostlyLinear.eigens r
 
-internet = True
+
 
 eigen : Matrix (Complex) -> {values: Vector Complex, cols: Matrix Complex}
-eigen m = if internet then eigen5 m 
-          else
-            let
-              anyC = List.all (\x -> x == True) (Array.toList (Array.map (\x -> List.all (\x -> x== True) (Array.toList (Array.map (C.isReal) x))) m ))
-            in
-              if not anyC then eigen3 m else eigen2 (Array.map (\x -> Array.map (C.real) x) m)
+eigen m =  case eigen5 m of
+             Just x -> x
+             _ ->             
+               let
+                 anyC = List.all (\x -> x == True) (Array.toList (Array.map (\x -> List.all (\x -> x== True) (Array.toList (Array.map (C.isReal) x))) m ))
+               in
+                 if not anyC then eigen3 m else eigen2 (Array.map (\x -> Array.map (C.real) x) m)
         
         
         
@@ -46,7 +47,9 @@ eigen5 m =
   let
     x = Native.CostlyLinear.eigens5 (matrixTourl m )
   in
-    {values = Array.fromList x.values, cols = (Array.fromList (List.map (Array.fromList) x.cols))}
+    if x.status == 1 then  Just {values = Array.fromList x.values, cols = (Array.fromList (List.map (Array.fromList) x.cols))}
+    else Nothing
+
   
 
 --eigens5
