@@ -4,7 +4,7 @@ Here is some instructions on how to use the interface:
 
 First run make to compile all the code. Then open index.html and in the input box you can enter the wolframalpha-format input and use compute to compute the result. Also you can plot functions using the plot button.
 
-To use individual libraries (complex, Linear, Calculus) you load them into the repl or include them in whatever. Note that while we are reasonably confident about most functionality, not everything is sure. Again, more time will be spent on this in the future as we want to have these be useful for more than just this project. As will be elaborate in Teo's part, you can only use eigen and diagnolziation stuff within a compiled file when you are connected to the internet.
+To use individual libraries (complex, Linear, Calculus) you load them into the repl or include them in whatever. Note that while we are reasonably confident about most functionality, not everything is sure. This is okay because a good portion of what we are unsure of is in not needed for the interface, but was part of an effort to build a more general system. And again, more time will be spent on this in the future as we want to have these be useful for more than just this project. As will be elaborate in Teo's part, you can only use eigen and diagnolziation stuff within a compiled file when you are connected to the internet. 
 
 what we have accomplished, overall (Written by Bowen):
 
@@ -33,3 +33,11 @@ This is not all that I did with Linear. Various other parts were shored up and t
 
 I also added tests. Using elm-tests, I added a testing system. On top of this, I also integrated it with travis ci so our git (https://github.com/teocollin1995/functionalfinalproject) now has a build passing/failing/errored icon. You can see the ci here: https://travis-ci.org/teocollin1995/functionalfinalproject. Note how absurdly long it takes to test because it needs to download all the libraries again and this takes a while for whatever reason.
 
+
+Teo's quick reflection:
+
+I think that my experience with native kind of speaks to how I feel about Elm. I really like it, but I find it rather difficient in some regards. It is a young language so that is okay, but it is still annoying as there are just a lot of rough edeges that I found out about...
+
+However, finding all of those out was pretty fun. In fact, I think that one of things that I like most about elm is how easy it for me to understand it. I had many problems that I solved simply by just going into the language source or the generated code. For example, I was having trouble understanding how native worked, but looking through the source really helped a lot. The way elm is built (a high level language that compiles into another high level language) actually makes it kind of easier to understand. I like this a lot... 
+
+So, im summary. Elm is a nice language with a lot of rough edges. Native is a complete hack and feels like an accident of how the language was built. On the other hand, this accident is really fun to investiage and I've learned a lot. Also, screw eigen values.
