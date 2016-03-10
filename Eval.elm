@@ -135,6 +135,7 @@ unparseUOp op =
                                               Ok <| EAnnot "diagonalize" <|
                                                  EVector <| A.fromList <| List.map (EMatrix << matrixToExp) [m1,m2,m3]
                            _               -> Err "matrix not diagonalizable"
+    RRef -> \m -> Ok <| EMatrix <| L.rowReduce expSpace <| unwrapMatrix m
     _  -> Debug.crash "unParseUOp"
 
 unparseBOp : Op -> Exp -> Exp -> Result String Exp

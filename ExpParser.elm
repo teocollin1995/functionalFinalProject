@@ -166,7 +166,8 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp Solve) "solve")
   <++ (token1 (EUnaryOp Inv) "inv")
   <++ (token1 (EUnaryOp Diagonalize) "diagonalize")
-  <++ (token1 (EUnaryOp Negate) "-"))
+  <++ (token1 (EUnaryOp Negate) "-")
+  <++ (token1 (EUnaryOp RRef) "rref"))
 
 parseMatrix : Parser Exp
 parseMatrix =

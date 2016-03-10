@@ -751,7 +751,7 @@ rowReduce space m1 = gaussianEliminationBackwards space (gaussianEliminationForw
 -}
 
 
---naming inconsistnecy! 
+--naming inconsistency! 
 gaussianEliminationForward : Space a -> Matrix a -> Matrix a
 gaussianEliminationForward space m =
   let

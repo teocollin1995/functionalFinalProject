@@ -53,6 +53,7 @@ type Op =
    | EigenVector
    | Inv
    | Diagonalize
+   | RRef
    | Solve
    -- more to be added
    

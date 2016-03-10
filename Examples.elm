@@ -33,6 +33,8 @@ linear5 = "inv {{452,1},{3,8}}"
 linear6 = "{{10,21},{1.3,0.5}}^2"
 
 linear7 = "diagonalize {{2,3},{1,5}}"
+
+linear8 = "rref {{17,1,2},{2,4,3},{1,7,9}}"
           
 calculus1 = "d/dx x"
 
@@ -64,6 +66,7 @@ examples =
   , ("matrix: inverse", linear5)
   , ("matrix: power", linear6)
   , ("matrix: diagonalization", linear7)
+  , ("matrix: row reduction", linear8)
   , ("calculus: derivative", calculus1)
   , ("calculus: partial derivative1", calculus2)
   , ("calculus: partial derivative2", calculus3)
