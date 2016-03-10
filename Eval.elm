@@ -11,8 +11,8 @@ import Result as R
 
 (>>=) = R.andThen
         
-eval : Exp -> Result String Exp
-eval e = R.map Parser.simplify <|
+eval_ : Exp -> Result String Exp
+eval_ e = R.map Parser.simplify <|
   case e of
     EConst const -> Ok <|
       case const of
@@ -20,16 +20,29 @@ eval e = R.map Parser.simplify <|
         E  -> EReal Basics.e
         _  -> Debug.crash <| "eval: impossible"
     EUnaryOp op e ->
-      let f = unparseUOp op in (eval e) >>= f
+      let f = unparseUOp op in (eval_ e) >>= f
     EBinaryOp op e1 e2 ->
       let f = unparseBOp op in
-      let (res1, res2) = (eval e1, eval e2) in
+      let (res1, res2) = (eval_ e1, eval_ e2) in
       res1 >>= \e1 ->
         res2 >>= \e2 ->
           f e1 e2
     EIntegral a b e -> Ok <| EReal <| numericIntegral a b e
     _ -> Ok e
 
+trim : Float -> Float
+trim x = if abs (x - (toFloat <| round x)) < 10^(-15) then toFloat <| round x else x
+         
+eval : Exp -> Result String Exp
+eval e =
+  let foo e =
+        case e of
+          EReal x -> EReal <| trim x
+          EComplex x -> EComplex <| { re = trim x.re, im = trim x.im }
+          _  -> e
+  in
+    R.map foo <| eval_ e
+  
 type alias UnaryFunc =
    { realFun : Real -> Real
    , complexFun : Complex -> Complex
