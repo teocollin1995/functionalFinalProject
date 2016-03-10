@@ -1,7 +1,7 @@
 [
   {
     "name": "Linear",
-    "comment": " The Linear module provides a variety of tools from Linear Algebra. Matrix and Vector are defined in expression, but tools for manipulating them (e.g. though maps, dot products, norms, row operations, determiants, eigen values, and what not) are stored here. \n\nIn order to allow you to accomplish these operations in full generality, we have created a Space type where you define zero, one, addition, multiplication, subtraction, division, and from real. Once you supply this for a particular type, you can specalize all the functions that require any of these operations. Any function that did not require these operations can be used for any Matrix a or Vector a.\n\nNote that for all functions take rows and cols, the rows are alwalys given first and then the cols. So for unsafeGetM : Int -> Int -> Matrix a -> a , the first argument is a row, the second is the column. \n\nTODO:\n\n# Space \n@docs Space, complexSpace\n\n# Builders\n@docs vector, matrix, rowVector, colVector\n\n# Dimensions \n@docs dimV, nrows, ncols\n\n# Special Matrices\n@docs same, identity, isIdentity, permMatrix, allPermutationMatricies, isTriangular, isSquare\n\n# List Conversions\n@docs vectorFromList, fromList, fromLists, toList, toLists, toVector\n\n# Accessing \n@docs unsafeGetM, unsafeGetRow, unsafeGetCol, unsafeGetDiag\n\n# Setting\n@docs set, setRow, setCol\n\n# Mapping\n@docs map, indexedMap, mapVector, indexedMapVector\n\n# Extensions\n@docs extendMatrix, extendMatrixTo\n\n# Submatricies and Blocks\n@docs submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors\n\n# Single Matrix, Row Operations, and Single Vector Operations \n@docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards\n\n# Operations on Two Matricies or Two Vectors\n@docs elementWise, vectorMap2, dotProd, matrixMult\n\n# Matrix properties\n@docs  invert, invertable, trace, diagProd, simpleDet\n\n# Numerical Linear Algebra \n@docs eigenValues, eigenVectors\n",
+    "comment": " The Linear module provides a variety of tools from Linear Algebra. Matrix and Vector are defined in expression, but tools for manipulating them (e.g. though maps, dot products, norms, row operations, determiants, eigen values, and what not) are stored here. \n\nIn order to allow you to accomplish these operations in full generality, we have created a Space type where you define zero, one, addition, multiplication, subtraction, division, and from real. Once you supply this for a particular type, you can specalize all the functions that require any of these operations. Any function that did not require these operations can be used for any Matrix a or Vector a.\n\nMost of everything should sort of work. The only parts that have no been subjected to some testing are extendMatrix throught horizontalJoin. Everything else should be at leat OKAY. With regard to the row reduction stuff, I will note that these could be improved in a few ways such as telling you when they can't do the full reduction and collecting the coefficents along the privots so that they can be used for more advanced determiant testing.\n\nNote that for all functions take rows and cols, the rows are alwalys given first and then the cols. So for unsafeGetM : Int -> Int -> Matrix a -> a , the first argument is a row, the second is the column. \n\n\n\n# Space \n@docs Space, complexSpace, Specialization, specalize, complex\n\n# Builders\n@docs vector, matrix, rowVector, colVector\n\n# Dimensions \n@docs dimV, nrows, ncols\n\n# Special Matrices\n@docs same, identity, isIdentity, permMatrix, allPermutationMatricies, isTriangular, isSquare\n\n# List Conversions\n@docs vectorFromList, fromList, fromLists, toList, toLists, toVector\n\n# Accessing \n@docs unsafeGetM, unsafeGetRow, unsafeGetCol, unsafeGetDiag\n\n# Setting\n@docs set, setRow, setCol,setDiag\n\n# Mapping\n@docs map, indexedMap, mapVector, indexedMapVector\n\n# Extensions\n@docs extendMatrix, extendMatrixTo\n\n# Submatricies and Blocks\n@docs submatrix, splitBlocks, verticalJoin, horizontalJoin, minor, minors\n\n# Single Matrix, Row Operations, and Single Vector Operations \n@docs transpose, scaleVector, scaleMatrix, scaleRow, combineRow, switchRow, rowReduce, gaussianEliminationForward, gaussianEliminationBackwards,vectorNorm, normalizeVector\n\n# Operations on Two Matricies or Two Vectors\n@docs elementWise, vectorMap2, dotProd,matrixMult, matrixPower\n\n# Matrix properties\n@docs  invert, invertable, trace, diagProd, simpleDet, simpleDet1\n\n# Numerical Linear Algebra \n@docs eigenValues, eigenVectors,diagonalization,eigen\n",
     "aliases": [
       {
         "name": "Space",
@@ -9,7 +9,15 @@
         "args": [
           "a"
         ],
-        "type": "{ zero : a , one : a , add : a -> a -> a , mult : a -> a -> a , sub : a -> a -> a , div : a -> a -> a , fromReal : Float -> a }"
+        "type": "{ zero : a , one : a , add : a -> a -> a , mult : a -> a -> a , sub : a -> a -> a , div : a -> a -> a , fromReal : Float -> a , abs : a -> Float }"
+      },
+      {
+        "name": "Specialization",
+        "comment": " A record type produced by the specalize function that contains all the functions that require the space argument prefixed with the space a. So, if you wanted the identity function for the real numbers you might use (specalize realSpace).identity instead of identity realSpace.\n\n",
+        "args": [
+          "a"
+        ],
+        "type": "{ identity : Int -> Expression.Matrix a , isIdentity : Expression.Matrix a -> Bool , permMatrix : Int -> Int -> Int -> Expression.Matrix a , allPermutationMatricies : Int -> List (Expression.Matrix a) , isTriangular : Expression.Matrix a -> Bool , scaleVector : a -> Expression.Vector a -> Expression.Vector a , scaleMatrix : a -> Expression.Matrix a -> Expression.Matrix a , scaleRow : Int -> a -> Expression.Matrix a -> Expression.Matrix a , combineRow : a -> Int -> Int -> Expression.Matrix a -> Expression.Matrix a , rowReduce : Expression.Matrix a -> Expression.Matrix a , gaussianEliminationForward : Expression.Matrix a -> Expression.Matrix a , gaussianEliminationBackwards : Expression.Matrix a -> Expression.Matrix a , dotProd : Expression.Vector a -> Expression.Vector a -> a , vectorNorm : Expression.Vector a -> Float , normalizeVector : Expression.Vector a -> Expression.Vector a , matrixMult : Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a , invert : Expression.Matrix a -> Maybe.Maybe (Expression.Matrix a) , invertable : Expression.Matrix a -> Bool , trace : Expression.Matrix a -> a , diagProd : Expression.Matrix a -> a , simpleDet : Expression.Matrix a -> a }"
       }
     ],
     "types": [],
@@ -30,6 +38,11 @@
         "type": "Linear.Space a -> a -> Int -> Int -> Expression.Matrix a -> Expression.Matrix a"
       },
       {
+        "name": "complex",
+        "comment": " The Complex Specalization\n\n",
+        "type": "Linear.Specialization Expression.Complex"
+      },
+      {
         "name": "complexSpace",
         "comment": " An example of a space\n",
         "type": "Linear.Space Expression.Complex"
@@ -40,6 +53,11 @@
         "type": "Linear.Space a -> Expression.Matrix a -> a"
       },
       {
+        "name": "diagonalization",
+        "comment": " Takes A and returns Nothing if A is not diagonalizable. If it is, returns P^-1, A, P. \n\n",
+        "type": "Expression.Matrix Expression.Complex -> Maybe.Maybe ( Expression.Matrix Expression.Complex , Expression.Matrix Expression.Complex , Expression.Matrix Expression.Complex )"
+      },
+      {
         "name": "dimV",
         "comment": " Length of a vector\n\n",
         "type": "Expression.Vector a -> Int"
@@ -48,6 +66,11 @@
         "name": "dotProd",
         "comment": " Computes the dot product of two vectors in a space.\n\n",
         "type": "Linear.Space a -> Expression.Vector a -> Expression.Vector a -> a"
+      },
+      {
+        "name": "eigen",
+        "comment": "\n\n",
+        "type": "Expression.Matrix Expression.Complex -> Maybe.Maybe Linear.EigenInfo"
       },
       {
         "name": "eigenValues",
@@ -160,6 +183,11 @@
         "type": "Linear.Space a -> Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a"
       },
       {
+        "name": "matrixPower",
+        "comment": " compute the power of a matrix ",
+        "type": "Linear.Space a -> Int -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
         "name": "minor",
         "comment": " Creates the minor matrix of from the ith element of the 1st row. It returns the ith element of the 1st row, the sign (-1.0 or 1.0), and the minor matrix.\n\n",
         "type": "Int -> Expression.Matrix a -> ( a, Float, Expression.Matrix a )"
@@ -173,6 +201,11 @@
         "name": "ncols",
         "comment": " What it says on the tin\n\n",
         "type": "Expression.Matrix a -> Int"
+      },
+      {
+        "name": "normalizeVector",
+        "comment": " Normalizes a vector\n\n",
+        "type": "Linear.Space a -> Expression.Vector a -> Expression.Vector a"
       },
       {
         "name": "nrows",
@@ -225,6 +258,11 @@
         "type": "Int -> Expression.Vector a -> Expression.Matrix a -> Expression.Matrix a"
       },
       {
+        "name": "setDiag",
+        "comment": " Sets the diagnoal of a matrix to a vector.\n\n",
+        "type": "Expression.Vector a -> Expression.Matrix a -> Expression.Matrix a"
+      },
+      {
         "name": "setRow",
         "comment": " Sets a row to the value of another vector\n\n\n",
         "type": "Int -> Expression.Vector a -> Expression.Matrix a -> Expression.Matrix a"
@@ -233,6 +271,16 @@
         "name": "simpleDet",
         "comment": " Calculates the determiant of a matrix with the cofactor expansion. This is O((n-1)!). I will probably add other versions of it to use rowReduction, but this can be done later.\n\n\n",
         "type": "Linear.Space a -> Expression.Matrix a -> a"
+      },
+      {
+        "name": "simpleDet1",
+        "comment": " a wrapper that prevents the program from crashing ",
+        "type": "Linear.Space a -> Expression.Matrix a -> Maybe.Maybe a"
+      },
+      {
+        "name": "specalize",
+        "comment": " Produces a specalization for a space as detailed above.\n\n",
+        "type": "Linear.Space a -> Linear.Specialization a"
       },
       {
         "name": "splitBlocks",
@@ -310,9 +358,178 @@
         "type": "(a -> b -> c) -> Expression.Vector a -> Expression.Vector b -> Expression.Vector c"
       },
       {
+        "name": "vectorNorm",
+        "comment": " Takes the norm of the vector i.e the square root of the sum of the squares of the absolute values.\n\n",
+        "type": "Linear.Space a -> Expression.Vector a -> Float"
+      },
+      {
         "name": "verticalJoin",
         "comment": " Vertically joins togeather one matrix with another.\n\n",
         "type": "Expression.Matrix a -> Expression.Matrix a -> Expression.Matrix a"
+      }
+    ],
+    "generated-with-elm-version": "0.16.0"
+  },
+  {
+    "name": "Complex",
+    "comment": " The complex module gives you most of what you could desire to use complex numbers. There is not much else to say. Do note that some functions return (Int -> Float). This is because there are no unique thigns for some complex operations (e.g. logs). You can typically just give the result a 0 and be fine with it, but sometimes you may want a particular class of values and this gives you the power to select them.\n\n# Basics\n@docs complex, i, one, zero\n\n# Basic operations on one number \n@docs real, isReal, fromReal, imaginary, negation, abs, absC, conjugage, rec, sgn, sqrt\n\n# Basic Binary Ops\n@docs add, sub, mult, div\n\n# Trig\n@docs euler, atan2, arg, ccos,csin, ctan, cacos,casin,catan\n\n# More advanced stuff\n@docs ln, exp, pow\n\n\n",
+    "aliases": [],
+    "types": [],
+    "values": [
+      {
+        "name": "abs",
+        "comment": " Takes the absolute value of a complex nuber \n",
+        "type": "Expression.Complex -> Float"
+      },
+      {
+        "name": "absC",
+        "comment": " Takes the absolute value of a complex number, but keeps it in complex space\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "add",
+        "comment": " Adds two complex numbers\n\n",
+        "type": "Expression.Complex -> Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "arg",
+        "comment": " The argument of a complex number. It is in radians\n\n",
+        "type": "Expression.Complex -> Float"
+      },
+      {
+        "name": "atan2",
+        "comment": " A really well made version of atan to be used in the argument\n\n",
+        "type": "number -> number' -> Float"
+      },
+      {
+        "name": "cacos",
+        "comment": " Complex inverse cosine\n\n",
+        "type": "Expression.Complex -> Int -> Expression.Complex"
+      },
+      {
+        "name": "casin",
+        "comment": " Complex inverse sine.\n\n",
+        "type": "Expression.Complex -> Int -> Expression.Complex"
+      },
+      {
+        "name": "catan",
+        "comment": " Complex inverse tan\n\n",
+        "type": "Expression.Complex -> Int -> Expression.Complex"
+      },
+      {
+        "name": "ccos",
+        "comment": " Complex cosine\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "complex",
+        "comment": " Generates a complex number. E.g complex 1 2 = 1+2i\n\n",
+        "type": "Float -> Float -> Expression.Complex"
+      },
+      {
+        "name": "conjugage",
+        "comment": " Returns the conjugate of a complex number e.g conjugate 2+3i = 2 - 3i\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "csin",
+        "comment": " Complex sine.\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "ctan",
+        "comment": " Complex tangent\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "div",
+        "comment": " Divides two complex numbers.\n\n",
+        "type": "Expression.Complex -> Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "euler",
+        "comment": "Euler's formula\n\n",
+        "type": "Float -> Expression.Complex"
+      },
+      {
+        "name": "exp",
+        "comment": " The exponent of a complex number.\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "fromReal",
+        "comment": " Creates a complex number from one real numer. So fromReal 5 = 5 + 0i\n\n",
+        "type": "Float -> Expression.Complex"
+      },
+      {
+        "name": "i",
+        "comment": " The number i.\n\n",
+        "type": "Expression.Complex"
+      },
+      {
+        "name": "imaginary",
+        "comment": " Takes the imaginary part of the complex number.\n\n",
+        "type": "Expression.Complex -> Float"
+      },
+      {
+        "name": "isReal",
+        "comment": " Tests if the numer is real\n\n",
+        "type": "Expression.Complex -> Bool"
+      },
+      {
+        "name": "ln",
+        "comment": " The natrual log of a complex number\n\n",
+        "type": "Expression.Complex -> Int -> Expression.Complex"
+      },
+      {
+        "name": "mult",
+        "comment": " Multiplies two complex numbers\n\n",
+        "type": "Expression.Complex -> Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "negation",
+        "comment": " Negates a complex number. E.g negation 1+2i = -1-2i\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "one",
+        "comment": " The number 1.\n\n",
+        "type": "Expression.Complex"
+      },
+      {
+        "name": "pow",
+        "comment": " Take a complex number to a complex power\n\n",
+        "type": "Expression.Complex -> Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "real",
+        "comment": " Provides the real part of a complex number. \n\n",
+        "type": "Expression.Complex -> Float"
+      },
+      {
+        "name": "rec",
+        "comment": " Reciprocal of a complex number\n\n",
+        "type": "Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "sgn",
+        "comment": " Sign of a complex number\n\n",
+        "type": "Expression.Complex -> Float"
+      },
+      {
+        "name": "sqrt",
+        "comment": " Square root of a complex number. Returns both possibilites.\n\n",
+        "type": "Expression.Complex -> ( Expression.Complex, Expression.Complex )"
+      },
+      {
+        "name": "sub",
+        "comment": "Subtacts two complex numbers.\n\n",
+        "type": "Expression.Complex -> Expression.Complex -> Expression.Complex"
+      },
+      {
+        "name": "zero",
+        "comment": " The number 0.\n\n",
+        "type": "Expression.Complex"
       }
     ],
     "generated-with-elm-version": "0.16.0"
