@@ -4,7 +4,7 @@ import Expression exposing (..)
 import Complex as C
 import Linear as L
 import Calculus as Ca
-import ExpParser as Parser exposing (isFunc)
+import ExpParser as Parser exposing (isFunc, unwrapMatrix)
 
 import Array as A
 import Result as R
@@ -92,12 +92,6 @@ vectorToExp v = A.map EComplex v
 
 matrixToExp : Matrix Complex -> Matrix Exp
 matrixToExp m = A.map vectorToExp m
-
-unwrapMatrix : Exp -> Matrix Exp
-unwrapMatrix m =
-  case m of
-    EMatrix m' -> m'
-    _          -> Debug.crash "not a matrix"
                   
 unparseUOp : Op -> Exp -> Result String Exp
 unparseUOp op =
@@ -138,7 +132,8 @@ unparseUOp op =
                    _       -> Err "inverse: matrix not invertible"
     Diagonalize -> \m -> case L.diagonalization (convertEMatrix <| unwrapMatrix m) of
                            Just (m1,m2,m3) -> let foo = L.matrixMult L.complexSpace in
-                                              Ok <| EMatrix <| matrixToExp ((m1 `foo` m2) `foo` m3)
+                                              Ok <| EAnnot "diagonalize" <|
+                                                 EVector <| A.fromList <| List.map (EMatrix << matrixToExp) [m1,m2,m3]
                            _               -> Err "matrix not diagonalizable"
     _  -> Debug.crash "unParseUOp"
 

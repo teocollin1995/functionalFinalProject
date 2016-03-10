@@ -54,7 +54,7 @@ outputStyle =
   Attr.style <|
       basicStyle ++
              [ ("position","relative")
-             , ("height", "100pt")
+             , ("height", "140pt")
              , ("width","370pt")
              --, ("top","50pt")
              --, ("left", "-50pt")

@@ -461,6 +461,12 @@ optionalParen op f e =
   else if isFunc e then paren <| unparse e
   else unparse e
 
+unwrapMatrix : Exp -> Matrix Exp
+unwrapMatrix m =
+  case m of
+    EMatrix m' -> m'
+    _          -> Debug.crash "not a matrix"
+                  
 unwrapAnnotation : String -> Exp -> String
 unwrapAnnotation ann e =
   let bar a acc = if acc == "" then a else a ++ "\\\\" ++ acc in
@@ -477,4 +483,14 @@ unwrapAnnotation ann e =
           let foo n v = "v_" ++ toString n ++ " = " ++ unparseVec v in
           A.foldr bar "" <| A.indexedMap foo m
         _ -> Debug.crash "impossible"
+    "diagonalize" ->
+      case e of
+        EVector v -> let list = A.toList <| A.map unwrapMatrix v in
+                     case list of
+                       [ m1, m2, m3 ] ->
+                         "S^{-1} = " ++ unparseMatrix m1 ++ "\\\\"
+                          ++ "J = " ++ unparseMatrix m2 ++ "\\\\"
+                          ++ "S = " ++ unparseMatrix m3
+                       _  -> Debug.crash "impossible"
+        _ -> Debug.crash "impossible"                                                        
     _  -> Debug.crash "annotation not supported"
