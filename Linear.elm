@@ -809,7 +809,7 @@ gaussianEliminationHelper space row m =
     case pivotedMatrix of 
       Nothing -> m
       Just m -> let
-        onePivotedMatrix = scaleRow space row (recip pivot) m --maybe I should clean this line up?
+        onePivotedMatrix = if pivot /= zero then scaleRow space row (recip pivot) m else m  --maybe I should clean this line up?
         targets = (Array.filter (\x -> (snd x) /= zero) (Array.slice (row+1) (rows+1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
      in
         (Array.foldr (\ (x,y) m ->  combineRow space (neg y) x row m ) onePivotedMatrix targets)
@@ -842,7 +842,7 @@ gaussianEliminationHelperBackwards space row m =
     case pivotedMatrix of 
       Nothing -> m
       Just m -> let
-        onePivotedMatrix = scaleRow space row (recip pivot) m --maybe I should clean this line below up?
+        onePivotedMatrix =  if pivot /= zero then scaleRow space row (recip pivot) m else m--maybe I should clean this line below up?
         targets = (Array.filter (\x -> (snd x) /= zero && (fst x) /= row) (Array.slice (0) (rows - 1) (ArrayE.map2 (,) (Array.fromList [0..rows]) (unsafeGetCol row onePivotedMatrix))))
      in
         (Array.foldr (\ (x,y) m ->  combineRow space (neg y) x row m ) onePivotedMatrix targets)
