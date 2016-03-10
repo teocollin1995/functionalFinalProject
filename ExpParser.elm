@@ -137,7 +137,13 @@ maybeParens p =
 parseConst : Parser Exp
 parseConst =
      (token1 (EConst Pi) "pi")
- -- <++ (token1 (EConst E) "e")
+ <++ (P.token "e" *>
+      P.look >>= \s ->
+        case String.toList s of
+          [] -> P.succeed <| EConst E
+          c::cs -> if isLetter c then P.empty
+                   else P.succeed <| EConst E
+     )
 
 parseUOp : Parser (Exp -> Exp)
 parseUOp = skipSpaces *>
@@ -224,6 +230,10 @@ parseNumDerv =
   skipSpaces >>= \_ ->
   P.succeed <| EBinaryOp NumDerv (EReal a) e
 
+parseReal1 : Parser Float
+parseReal1 =
+  intOrFloat <++ token1 pi "pi" <++ token1 e "e"
+             
 parseIntegral : Parser Exp
 parseIntegral =
   skipSpaces *>
@@ -232,11 +242,11 @@ parseIntegral =
   skipSpaces *>
   P.token "from" *>
   skipSpaces *>
-  intOrFloat >>= \a ->
+  parseReal1 >>= \a ->
   skipSpaces *>
   P.token "to" *>
   skipSpaces *>
-  intOrFloat >>= \b ->
+  parseReal1 >>= \b ->
   skipSpaces >>= \_ ->
   P.succeed <| EIntegral a b e
    

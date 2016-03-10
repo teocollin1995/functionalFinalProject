@@ -6,6 +6,8 @@ basic2 = "(4+3)/2"
 
 basic3 = "(1+5)*(2-8)"
 
+basic4 = "pi^e"
+         
 function1 = "sin(4)"
 
 function2 = "cos(3)*sin(3)"
@@ -46,6 +48,7 @@ examples =
   , ("number: add", basic1)
   , ("number: div", basic2)
   , ("number: parens" , basic3)
+  , ("number: consts", basic4)
   , ("function: sin", function1)
   , ("function: cos", function2)
   , ("complex: mult", complex1)
