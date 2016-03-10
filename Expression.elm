@@ -39,7 +39,8 @@ type Op =
    | Floor | Ceiling | Round
    | Sqrt | Log
    | Re | Im 
-   | Abs 
+   | Abs
+   | Negate
    -- binary ops
    | Plus | Minus | Mult | Frac
    | Pow | Mod

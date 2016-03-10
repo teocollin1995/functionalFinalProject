@@ -28,6 +28,8 @@ linear4 = "det {{3,1,4},{2,176,9},{24,821,190}}"
 
 linear5 = "inv {{452,1},{3,8}}"
 
+linear6 = "{{10,21},{1.3,0.5}}^2"
+          
 calculus1 = "d/dx x"
 
 calculus2 = "d/dx (x^2 +y)"
@@ -55,6 +57,7 @@ examples =
   , ("matrix: eigenvector", linear3)
   , ("matrix: det", linear4)
   , ("matrix: inverse", linear5)
+  , ("matrix: power", linear6)
   , ("calculus: derivative", calculus1)
   , ("calculus: partial derivative1", calculus2)
   , ("calculus: partial derivative2", calculus3)

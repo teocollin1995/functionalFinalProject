@@ -159,7 +159,8 @@ parseUOp = skipSpaces *>
   <++ (token1 (EUnaryOp EigenVector) "eigenvector")
   <++ (token1 (EUnaryOp Solve) "solve")
   <++ (token1 (EUnaryOp Inv) "inv")
-  <++ (token1 (EUnaryOp Diagonalize) "diagonalize"))
+  <++ (token1 (EUnaryOp Diagonalize) "diagonalize")
+  <++ (token1 (EUnaryOp Negate) "-"))
 
 parseMatrix : Parser Exp
 parseMatrix =
@@ -291,6 +292,7 @@ strOp op =
     Frac -> "/"
     Pow  -> "^"
     Mod  -> "mod"
+    Negate -> "-"
     _  -> Debug.crash <| "strOp: " ++ toString op
 
 --parse and unparse based on http://cmsc-16100.cs.uchicago.edu/2015/Lectures/23-propositional-logic-parsing.php
@@ -406,7 +408,7 @@ prec i e =
                   else toString x.re ++ "+" ++ toString x.im ++ "i"
     EVector v -> unparseVec v
     EMatrix m -> unparseMatrix m
-    EUnaryOp op e1 -> strOp op ++ optionalParen (prec 4) e1
+    EUnaryOp op e1 -> strOp op ++ optionalParen op (prec 4) e1
     EBinaryOp op e1 e2 ->
       let toPrec n = paren n i <| prec n e1 ++ strOp op ++ prec n e2 in
       case op of
@@ -435,10 +437,12 @@ isFunc e =
     EBinaryOp _ e1 e2 -> isFunc e1 || isFunc e2
     _ -> False
 
-optionalParen : (Exp -> String) -> Exp -> String
-optionalParen f e =
+optionalParen : Op -> (Exp -> String) -> Exp -> String
+optionalParen op f e =
   let paren s = "(" ++ s ++ ")" in
-  if isFunc e then paren <| unparse e else unparse e
+  if op == Negate then unparse e
+  else if isFunc e then paren <| unparse e
+  else unparse e
 
 unwrapAnnotation : String -> Exp -> String
 unwrapAnnotation ann e =
