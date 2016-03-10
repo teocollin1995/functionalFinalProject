@@ -15,7 +15,7 @@ module Complex where
 @docs add, sub, mult, div
 
 # Trig
-@docs euler, atan2, arg, ccos,csin, ctan, cacos,casine,catan
+@docs euler, atan2, arg, ccos,csin, ctan, cacos,casin,catan
 
 # More advanced stuff
 @docs ln, exp, pow
