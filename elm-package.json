@@ -9,7 +9,7 @@
         "tests/"
     ],
     "exposed-modules": [
-        "Linear"
+        "Linear", "Complex"
     ],
     "native-modules": true,
     "dependencies": {
