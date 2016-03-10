@@ -1114,7 +1114,7 @@ diagonalization m =
           Just pinverse -> let
             diagnoal = setDiag eigeninfo.values (identity complexSpace r )
          in
-           Just (pinverse, diagnoal,eigenVectors )
+           Just (pinverse, diagnoal,transpose (eigeninfo.cols ) )
 
       
 
